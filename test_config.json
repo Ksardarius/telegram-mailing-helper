@@ -1,0 +1,9 @@
+{
+  "db": {
+    "dbFile": "/tmp/telegram_mailing_help.db"
+  },
+  "server": {
+  },
+  "rootConfigDir": "../data/",
+  "telegramToken": "inputTelTokenHere"
+}
