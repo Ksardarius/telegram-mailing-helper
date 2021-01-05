@@ -4,18 +4,28 @@ import pathlib
 import threading
 from functools import wraps
 
-from bottle import Bottle, request, response, get, post, template, static_file, run as run_bottle
+from bottle import BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, run as run_bottle
+
+BaseRequest.MEMFILE_MAX = 1024 * 1024 * 1024 * 10
 
 from telegram_mailing_help import __version__
+from telegram_mailing_help import use_gevent
 from telegram_mailing_help.db.dao import Dao, UserState
+from telegram_mailing_help.logic.listPreparation import Preparation
 
 log = logging.getLogger("bottleServer")
 
 db: Dao = None
+preparation: Preparation = None
 
 
 def _getTemplateFile(templateName):
     return str(pathlib.Path(__file__).parent.absolute()) + '/templates/' + templateName
+
+
+@get("/")
+def rootRedirect():
+    return redirect("/pages/dispatch_lists.html")
 
 
 @get("/info")
@@ -28,9 +38,31 @@ def users():
     return template(_getTemplateFile("users.tpl"), users=db.getAllUsers(), userStateCls=UserState)
 
 
+@get("/pages/dispatch_lists.html")
+def users():
+    return template(_getTemplateFile("dispatch_lists.tpl"), dispatchGroupNames=list(db.getAllDispatchGroupNames()))
+
+
 @get("/pages/<page>")
 def pages(page):
     return static_file(page, root=_getTemplateFile(""))
+
+
+@post("/api/lists/add")
+def addDispatchList():
+    dispatchGroupName = request.forms.name
+    description = request.forms.description
+    links = request.forms.list.splitlines()
+    groupSize = int(request.forms.groupSize)
+    disableByDefault = bool(request.forms.disableByDefault)
+    countOfAddedDispatchList = preparation.addDispatchList(dispatchGroupName, description, links, groupSize,
+                                                           disableByDefault)
+    return {"success": True, "countOfAddedItems": countOfAddedDispatchList}
+
+
+@get("/api/lists/<gr_name>")
+def getDispatchGroupInfo(gr_name):
+    return template(_getTemplateFile("dispatch_group_info.tpl"), info=db.getDispatchGroupInfo(gr_name))
 
 
 @post("/api/users/confirm")
@@ -49,10 +81,11 @@ def confirmUser():
 
 class BottleServer(threading.Thread):
 
-    def __init__(self, config, dao: Dao):
-        global db
+    def __init__(self, config, dao: Dao, preparationList: Preparation):
+        global db, preparation
         threading.Thread.__init__(self, name=__name__)
         db = dao
+        preparation = preparationList
         self.daemon = True
         self.config = config
         # Event to start the exit process.
@@ -63,12 +96,21 @@ class BottleServer(threading.Thread):
     def logToLogger(self, fn):
         @wraps(fn)
         def _logToLogger(*args, **kwargs):
-            actual_response = fn(*args, **kwargs)
-            log.info('%s %s %s %s' % (request.remote_addr,
-                                      request.method,
-                                      request.url,
-                                      response.status))
-            return actual_response
+            try:
+                actual_response = fn(*args, **kwargs)
+                log.info('%s %s %s %s',
+                         request.remote_addr,
+                         request.method,
+                         request.url,
+                         response.status)
+                return actual_response
+            except Exception as e:
+                log.exception("Exception while call %s %s %s %s:",
+                              request.remote_addr,
+                              request.method,
+                              request.url,
+                              response.status)
+                raise e
 
         return _logToLogger
 
@@ -77,6 +119,6 @@ class BottleServer(threading.Thread):
         server.install(self.logToLogger)
         run_bottle(host=self.config.server.host,
                    port=self.config.server.port,
-                   server=self.config.server.engine,
+                   server="gevent" if use_gevent else "wsgiref",
                    plugins=[self.logToLogger],
                    quiet=True)

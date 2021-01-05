@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 from telegram_mailing_help.db.config import Configuration
-from telegram_mailing_help.db.dao import Dao, UserState
+from telegram_mailing_help.db.dao import Dao, UserState, DispatchGroupInfo
 from telegram_mailing_help.db.dao import DispatchListItem
 from telegram_mailing_help.db.dao import User
 from telegram_mailing_help.db.migration import Migration
@@ -27,8 +27,12 @@ dao = Dao(config)
 
 
 def test_save_dispatch_list_item():
-    item = DispatchListItem(id=None, dispatch_group_name="OK", links_values_butch="l1\nl2", description="test_data",
-                            created=datetime.now().isoformat())
+    item = DispatchListItem(
+        id=None,
+        dispatch_group_name="OK",
+        links_values_butch="l1\nl3",
+        description="test_data",
+        created=datetime.now().isoformat())
     item = dao.saveDispatchList(item)
     assert item.id != 0
     rezFromDaoById = dao.getDispatchListById(item.id)
@@ -54,11 +58,67 @@ def test_save_dispatch_list_item():
     assert rezFromDaoById.id == currentId
 
 
+def test_get_dispatch_groups():
+    dao.freeQuery("delete from DISPATCH_LIST;")
+    item1 = DispatchListItem(
+        id=None,
+        dispatch_group_name="gr1",
+        links_values_butch="l1\nl2",
+        description="test_data",
+        created=datetime.now().isoformat())
+    item2 = DispatchListItem(
+        id=None,
+        dispatch_group_name="gr1",
+        links_values_butch="l3\nl4",
+        description="test_data",
+        created=datetime.now().isoformat())
+    item3 = DispatchListItem(
+        id=None,
+        dispatch_group_name="gr2",
+        links_values_butch="l5\nl6",
+        description="test_data",
+        created=datetime.now().isoformat())
+    for item in [item1, item2, item3]:
+        dao.saveDispatchList(item)
+
+    assert dao.freeQuery("select count(*) from DISPATCH_LIST")[0][0] == 3
+    assert sorted(list(dao.getAllDispatchGroupNames())) == ["gr1", "gr2"]
+
+
+def test_get_info_about_dispatch_group():
+    gr_name = "test_gr_name_%s" % uuid.uuid4()
+
+    item1 = DispatchListItem(
+        id=None,
+        dispatch_group_name=gr_name,
+        links_values_butch="l1\nl2\n%s" % uuid.uuid4(),
+        description="test_data",
+        created=datetime.now().isoformat(),
+        is_assigned=True)
+    item2 = DispatchListItem(
+        id=None,
+        dispatch_group_name=gr_name,
+        links_values_butch="l1\nl2\n%s" % uuid.uuid4(),
+        description="test_data",
+        created=datetime.now().isoformat())
+    item3 = DispatchListItem(
+        id=None,
+        dispatch_group_name=gr_name,
+        links_values_butch="l1\nl2\n%s" % uuid.uuid4(),
+        description="test_data",
+        created=datetime.now().isoformat())
+    for item in [item1, item2, item3]:
+        dao.saveDispatchList(item)
+    assert dao.getDispatchGroupInfo(gr_name) == DispatchGroupInfo(dispatch_group_name=gr_name, count=3,
+                                                                  assigned_count=1, free_count=2)
+    assert dao.getDispatchGroupInfo(gr_name + "_failed") is None
+
+
 def multi_thread(index, counter, net_name):
     item = DispatchListItem(
         id=None,
         dispatch_group_name=net_name,
-        links_values_butch="l1\nl2",
+        links_values_butch="l1\nl2\nuser_%s" % uuid.uuid4(),
         description="test_data_%s" % index,
         created=datetime.now().isoformat())
     log.info("test_net_id: %s", dao.saveDispatchList(item).id)
@@ -72,7 +132,7 @@ def test_multi_threading_add_dispatch_list():
     for i in range(attempts):
         threading.Thread(target=multi_thread, args=(i, counter, net_name)).start()
 
-    counter.wait()
+    counter.wait(timeout=5)
     rez = list(dao.getDispatchListByDispatchGroupName(net_name))
     assert len(rez) == attempts, "wrong records count, should be %s" % attempts
 

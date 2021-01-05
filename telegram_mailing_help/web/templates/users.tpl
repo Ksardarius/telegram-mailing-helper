@@ -57,7 +57,7 @@
         <h1 class="u-text u-text-1">Рассылки: админка</h1>
       </div></header>
     <section class="u-align-center u-clearfix u-section-1" id="sec-2267">
-      <div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
+      <div class="u-clearfix u-sheet u-valign-top u-sheet-1">
         <div class="u-expanded-width u-table u-table-responsive u-table-1">
           <table class="u-table-entity u-table-entity-1">
             <colgroup>
@@ -78,12 +78,12 @@
             </thead>
             <tbody class="u-table-alt-grey-5 u-table-body">
             % for user in users:
-              <tr style="height: 78px;">
+              <tr style="height: 21px;">
                 <td class="u-border-1 u-border-grey-30 u-first-column u-grey-50 u-table-cell u-table-cell-5">{{user.id}}</td>
                 <td class="u-border-1 u-border-grey-30 u-first-column u-grey-50 u-table-cell u-table-cell-5">{{user.name}}</td>
                 <td class="u-border-1 u-border-grey-30 u-table-cell">{{userStateCls(user.state).getLocalizedMessage()}}</td>
                 <td class="u-border-1 u-border-active-palette-2-base u-border-hover-palette-1-base u-btn-rectangle u-none u-table-cell u-text-palette-1-base u-table-cell-7">
-                  <a href="#" onclick="{{'confirm' if user.state=='new' or user.state=='blocked' else 'block'}}('{{user.id}}')" class="u-active-none u-border-none u-btn u-button-link u-button-style u-hover-none u-none u-text-palette-1-base u-btn-1">Изменить состояние</a>
+                  <a href="#" onclick="{{'confirm' if user.state=='new' or user.state=='blocked' else 'block'}}('{{user.id}}')" class="u-active-none u-border-none u-btn u-button-link u-button-style u-hover-none u-none u-text-palette-1-base u-btn-1">  Изменить состояние</a>
                 </td>
                 <td class="u-border-1 u-border-grey-30 u-table-cell">{{user.created}}</td>
               </tr>

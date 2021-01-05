@@ -1,1 +1,2 @@
-__version__ = '0.1.0'
+use_gevent = False
+__version__ = '0.1.1'

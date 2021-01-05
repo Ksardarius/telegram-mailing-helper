@@ -12,6 +12,7 @@ import telegram_mailing_help.db.config as configDb
 import telegram_mailing_help.db.migration as db
 import telegram_mailing_help.web.config as configServer
 from telegram_mailing_help.db.dao import Dao
+from telegram_mailing_help.logic.listPreparation import Preparation
 from telegram_mailing_help.telegram import bot
 from telegram_mailing_help.web import server
 
@@ -54,10 +55,12 @@ class TelegramMailingHelper:
 
         self.dao = Dao(appConfig)
 
-        self.telegramBot = bot.MailingBot(appConfig, self.dao)
+        self.preparation = Preparation(appConfig, self.dao)
+
+        self.telegramBot = bot.MailingBot(appConfig, self.dao, self.preparation)
         self.telegramBot.start()
 
-        self.server = server.BottleServer(appConfig, self.dao)
+        self.server = server.BottleServer(appConfig, self.dao, self.preparation)
         self.server.start()
 
         for sig in (SIGINT, SIGTERM, SIGABRT):

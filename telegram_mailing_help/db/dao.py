@@ -1,15 +1,24 @@
+import hashlib
 import logging
+import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from sqlite3worker import Sqlite3Worker
 
+from telegram_mailing_help.db.daoExp import OptimisticLockException
 from telegram_mailing_help.db.utils import getDbFullPath
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 log = logging.getLogger()
+
+
+class AssignState(Enum):
+    ASSIGNED = 'assigned'
+    ROLLBACK = 'rollback'
 
 
 class UserState(Enum):
@@ -35,7 +44,18 @@ class DispatchListItem:
     links_values_butch: str
     description: str
     created: str
+    enabled: bool = True
+    _check_sum: str = None
+    _version: int = 0
     is_assigned: bool = False
+
+
+@dataclass
+class DispatchGroupInfo:
+    dispatch_group_name: str
+    count: int
+    assigned_count: int
+    free_count: int
 
 
 @dataclass
@@ -57,8 +77,10 @@ class Dao:
     def freeQuery(self, sql):
         return self.worker.execute(sql)
 
-    def __saveEntity(self, tableName, item):
+    def __saveEntity(self, tableName, item, useVersion=False):
         if item.id is None:
+            if useVersion:
+                item._version = 0
             sql = "INSERT INTO %(tableName)s (%(fields)s) VALUES (%(values)s)" % {
                 "tableName": tableName,
                 "fields": ",".join(list(item.__dict__.keys())),
@@ -67,15 +89,52 @@ class Dao:
             self.worker.execute(sql, values=tuple(item.__dict__.values()))
             item.id = self.worker.execute("Select last_insert_rowid() as id")[0][0]
         else:
-            sql = "UPDATE %(tableName)s set %(values)s where id=?" % {
+            setVersionWhere = ""
+            if useVersion:
+                setVersionWhere = "and _version=%s" % item._version
+                item._version = item._version + 1
+            sql = "UPDATE %(tableName)s set %(values)s where id=? %(setVersionWhere)s" % {
                 "tableName": tableName,
-                "values": ",".join(list(map(lambda k: "%s=?" % k, item.__dict__.keys())))
+                "values": ",".join(list(map(lambda k: "%s=?" % k, item.__dict__.keys()))),
+                "setVersionWhere": setVersionWhere
             }
             self.worker.execute(sql, values=tuple(list(item.__dict__.values()) + [item.id]))
+            if useVersion:
+                if self.worker.execute(
+                        "SELECT COUNT(id) FROM %(tableName)s WHERE id=? AND _version=?" % {"tableName": tableName},
+                        values=(item.id, item._version))[0][0] != 1:
+                    raise OptimisticLockException()
         return item
 
+    def getFreeDispatchListItem(self, dispatch_group_name):
+        result = self.worker.execute(
+            "SELECT * from DISPATCH_LIST WHERE dispatch_group_name=? AND is_assigned=0 LIMIT 1",
+            values=(dispatch_group_name,))
+        if len(result) != 1:
+            return None
+        else:
+            return DispatchListItem(*result[0])
+
+    def assignBlockIntoUser(self, user: User, dispatch_list: DispatchListItem):
+        self.worker.execute("UPDATE DISPATCH_LIST set is_assigned=1, _version=? WHERE id=? and _version=?",
+                            values=(dispatch_list._version + 1, dispatch_list.id, dispatch_list._version))
+        assignId = str(uuid.uuid4())
+        self.worker.execute(
+            "INSERT INTO DISPATCH_LIST_ASSIGNS (uuid,dispatch_list_id,users_id,state,change_date) values (?,?,?,?,?)",
+            values=(assignId, dispatch_list.id, user.id, AssignState.ASSIGNED.value, datetime.now().isoformat()))
+        if self.worker.execute(
+                "SELECT COUNT(id) FROM DISPATCH_LIST WHERE id=? AND _version=?",
+                values=(dispatch_list.id, dispatch_list._version + 1))[0][0] != 1:
+            self.worker.execute("DELETE FROM DISPATCH_LIST_ASSIGNS WHERE uuid=?",
+                                values=(assignId,))
+            raise OptimisticLockException()
+        else:
+            dispatch_list._version = dispatch_list._version + 1
+
     def saveDispatchList(self, item: DispatchListItem):
-        return self.__saveEntity("DISPATCH_LIST", item)
+        item._check_sum = hashlib.md5(
+            bytearray(item.links_values_butch + item.dispatch_group_name, encoding="utf-8")).hexdigest()
+        return self.__saveEntity("DISPATCH_LIST", item, useVersion=True)
 
     def saveUser(self, item: User):
         return self.__saveEntity("USERS", item)
@@ -126,3 +185,42 @@ class Dao:
         else:
             for row in result:
                 yield DispatchListItem(*row)
+
+    def getAllDispatchGroupNames(self):
+        result = self.worker.execute("SELECT DISTINCT(dispatch_group_name) from DISPATCH_LIST")
+        if len(result) == 0:
+            return []
+        else:
+            for row in result:
+                yield row[0]
+
+    def getEnabledDispatchGroupNames(self):
+        result = self.worker.execute("SELECT DISTINCT(dispatch_group_name) from DISPATCH_LIST WHERE enabled = 1")
+        if len(result) == 0:
+            return []
+        else:
+            for row in result:
+                yield row[0]
+
+    def enableDispatchGroupName(self, dispatch_group_name):
+        self.worker.execute("UPDATE DISPATCH_LIST SET enabled=1,_version=_version+1 WHERE dispatch_group_name=?",
+                            values=(dispatch_group_name,))
+
+    def disableDispatchGroupName(self, dispatch_group_name):
+        self.worker.execute("UPDATE DISPATCH_LIST SET enabled=0,_version=_version+1 WHERE dispatch_group_name=?",
+                            values=(dispatch_group_name,))
+
+    def getDispatchGroupInfo(self, dispatch_group_name):
+        result = self.worker.execute(
+            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned) FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
+            values=(dispatch_group_name,))
+        if len(result) == 0:
+            return None
+        else:
+            row = result[0]
+            return DispatchGroupInfo(
+                dispatch_group_name=row[0],
+                count=row[1],
+                assigned_count=row[2],
+                free_count=row[1] - row[2]
+            )
