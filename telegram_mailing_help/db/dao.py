@@ -123,13 +123,15 @@ class Dao:
             "INSERT INTO DISPATCH_LIST_ASSIGNS (uuid,dispatch_list_id,users_id,state,change_date) values (?,?,?,?,?)",
             values=(assignId, dispatch_list.id, user.id, AssignState.ASSIGNED.value, datetime.now().isoformat()))
         if self.worker.execute(
-                "SELECT COUNT(id) FROM DISPATCH_LIST WHERE id=? AND _version=?",
-                values=(dispatch_list.id, dispatch_list._version + 1))[0][0] != 1:
+                "SELECT COUNT(dl.id) FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_ASSIGNS dla ON (dla.dispatch_list_id=dl.id ) "
+                "WHERE dl.id =? AND dl._version=? AND dla.users_id =?",
+                values=(dispatch_list.id, dispatch_list._version + 1, user.id))[0][0] != 1:
             self.worker.execute("DELETE FROM DISPATCH_LIST_ASSIGNS WHERE uuid=?",
                                 values=(assignId,))
             raise OptimisticLockException()
         else:
             dispatch_list._version = dispatch_list._version + 1
+            dispatch_list.is_assigned = True
 
     def saveDispatchList(self, item: DispatchListItem):
         item._check_sum = hashlib.md5(

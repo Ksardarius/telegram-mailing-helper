@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime
 
 from telegram_mailing_help.db.dao import Dao, DispatchListItem, User
@@ -11,6 +12,7 @@ class Preparation:
     def __init__(self, config, dao: Dao):
         self.dao = dao
         self.config = config
+        self._assignLock = threading.Lock()
 
     @staticmethod
     def _chunks(lst, n):
@@ -38,21 +40,22 @@ class Preparation:
         return countOfAdded
 
     def getAndAssignDispatchList(self, user: User, dispatch_group_name: str):
-        attempt = 1
-        item = None
-        while attempt < 5:
-            try:
-                item = self.dao.getFreeDispatchListItem(dispatch_group_name)
-                if item:
-                    self.dao.assignBlockIntoUser(user, item)
-                break
-            except OptimisticLockException:
-                log.warning("Can't assign dispatchList with id: %s optimistic lock, attempt: %s", item.id, attempt)
-                item = None
-            attempt += 1
+        with self._assignLock:
+            attempt = 1
+            item = None
+            while attempt < 5:
+                try:
+                    item = self.dao.getFreeDispatchListItem(dispatch_group_name)
+                    if item:
+                        self.dao.assignBlockIntoUser(user, item)
+                    break
+                except OptimisticLockException:
+                    log.warning("Can't assign dispatchList with id: %s optimistic lock, attempt: %s", item.id, attempt)
+                    item = None
+                attempt += 1
 
-        if item:
-            return item.links_values_butch
-        else:
-            return "Свободных блоков для данного списка больше нет," \
-                   " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка"
+            if item:
+                return item.links_values_butch
+            else:
+                return "Свободных блоков для данного списка больше нет," \
+                       " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка"

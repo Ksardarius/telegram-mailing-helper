@@ -175,19 +175,14 @@
                                 <div class="u-form-group u-form-select u-form-group-4">
                                     <label for="select-1ff5" class="u-label">Разделить список на группы по:</label>
                                     <div class="u-form-select-wrapper">
-                                        <select id="select-1ff5" name="groupSize"
+                                        <datalist id="groupSizeVariants">
+                                            <option>4</option>
+                                            <option>5</option>
+                                            <option>9</option>
+                                        </datalist>
+                                        <input type="text" id="select-1ff5" name="groupSize" list="groupSizeVariants"
                                                 class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-radius-5 u-white"
-                                                required="required">
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                            <option value="100">100</option>
-                                        </select>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" version="1"
-                                             class="u-caret">
-                                            <path fill="currentColor" d="M4 8L0 4h8z"></path>
-                                        </svg>
+                                                required="required" />
                                     </div>
                                 </div>
                                 <div class="u-form-checkbox u-form-group u-form-group-5">

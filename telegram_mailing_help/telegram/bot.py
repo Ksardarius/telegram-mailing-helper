@@ -45,7 +45,9 @@ class MailingBot:
                     created=datetime.now().isoformat()
                 )
                 self.db.saveUser(user)
-            message.reply_text(text=text)
+            message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton(text="Попробовать еще раз",
+                                       callback_data="get_dispatch_group_names")]]))
         else:
             text = "Выберите рассылку из предложенных, %s:" % user.name
             message.reply_text(text,
@@ -67,8 +69,9 @@ class MailingBot:
             text = self.preparation.getAndAssignDispatchList(user, dispatchListGroupName)
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
-                                                         [[InlineKeyboardButton(text="След. блок",
-                                                                                callback_data=update.callback_query.data),
+                                                         [[InlineKeyboardButton(
+                                                             text="След. блок %s" % dispatchListGroupName,
+                                                             callback_data=update.callback_query.data),
                                                            InlineKeyboardButton(text="Выбрать другой список",
                                                                                 callback_data="get_dispatch_group_names")]]))
         else:
