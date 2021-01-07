@@ -2,8 +2,8 @@ import logging
 from datetime import datetime
 
 from telegram import InlineKeyboardMarkup, \
-    InlineKeyboardButton, Update
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+    InlineKeyboardButton, Update, ParseMode
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
 from telegram.ext import Updater
 
 from telegram_mailing_help.db.dao import Dao, User, UserState
@@ -12,6 +12,7 @@ from telegram_mailing_help.logic.listPreparation import Preparation
 log = logging.getLogger("mailingBot")
 
 
+# unicode codes: https://apps.timwhitlock.info/emoji/tables/unicode
 class MailingBot:
     def __init__(self, config, db: Dao, preparation: Preparation):
         self.db = db
@@ -55,9 +56,11 @@ class MailingBot:
                                    [[InlineKeyboardButton(text=groupName,
                                                           callback_data="get_links_from: %s" % groupName)]
                                     for groupName in self.db.getEnabledDispatchGroupNames()]))
+        if update.callback_query:
+            update.callback_query.answer()
 
     @staticmethod
-    def unknown(update: Update, context):
+    def unknown(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text="Такую команду бот не поддерживает, попробуйте сначала /start")
 
@@ -67,13 +70,20 @@ class MailingBot:
         if UserState(user.state) == UserState.CONFIRMED:
             dispatchListGroupName = update.callback_query.data[len("get_links_from: "):]
             text = self.preparation.getAndAssignDispatchList(user, dispatchListGroupName)
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     text="<b style='text-align: center;'>%s:</b>" % dispatchListGroupName,
+                                     parse_mode=ParseMode.HTML)
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
-                                                         [[InlineKeyboardButton(
-                                                             text="След. блок %s" % dispatchListGroupName,
-                                                             callback_data=update.callback_query.data),
-                                                           InlineKeyboardButton(text="Выбрать другой список",
-                                                                                callback_data="get_dispatch_group_names")]]))
+                                                         [
+                                                             [InlineKeyboardButton(
+                                                                 text="\U000027A1 %s: след. блок" % dispatchListGroupName,
+                                                                 callback_data=update.callback_query.data)],
+                                                             [InlineKeyboardButton(
+                                                                 text="\U0001F4C3 Выбрать другой список",
+                                                                 callback_data="get_dispatch_group_names")]
+                                                         ]))
+            update.callback_query.answer()
         else:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
 
