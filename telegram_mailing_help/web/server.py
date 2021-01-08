@@ -62,7 +62,26 @@ def addDispatchList():
 
 @get("/api/lists/<gr_name>")
 def getDispatchGroupInfo(gr_name):
-    return template(_getTemplateFile("dispatch_group_info.tpl"), info=db.getDispatchGroupInfo(gr_name))
+    info = db.getDispatchGroupInfo(gr_name)
+    return template(_getTemplateFile("dispatch_group_info.tpl"), data={
+        "info": info,
+        "state": {
+            "text": "Скрыть кнопку" if info.enabled else "Показывать кнопку",
+            "value": "disable" if info.enabled else "enable"
+        }
+    })
+
+
+@post("/api/lists/<gr_name>/state")
+def changeStateOfGroupAt(gr_name):
+    body = json.load(request.body)
+    if body["state"] == "enable":
+        db.enableDispatchGroupName(gr_name)
+    elif body["state"] == "disable":
+        db.disableDispatchGroupName(gr_name)
+    else:
+        raise RuntimeError("Unknown state for group: %s : %s" % (gr_name, body["state"]))
+    return {"success": True, "gr_name": gr_name}
 
 
 @post("/api/users/confirm")

@@ -56,6 +56,7 @@ class DispatchGroupInfo:
     count: int
     assigned_count: int
     free_count: int
+    enabled: bool
 
 
 @dataclass
@@ -214,7 +215,7 @@ class Dao:
 
     def getDispatchGroupInfo(self, dispatch_group_name):
         result = self.worker.execute(
-            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned) FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
+            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned),enabled FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
             values=(dispatch_group_name,))
         if len(result) == 0:
             return None
@@ -224,5 +225,6 @@ class Dao:
                 dispatch_group_name=row[0],
                 count=row[1],
                 assigned_count=row[2],
-                free_count=row[1] - row[2]
+                free_count=row[1] - row[2],
+                enabled=bool(row[3])
             )

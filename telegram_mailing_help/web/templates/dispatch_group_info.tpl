@@ -1,6 +1,9 @@
 <div id="dispatch-group-info">
-    <li>Название: {{info.dispatch_group_name}}</li>
-    <li>Количество блоков: {{info.count}}</li>
-    <li>Кол-во назначенных блоков: {{info.assigned_count}}</li>
-    <li>Кол-во свободных блоков: {{info.free_count}}</li>
+    <ul class="u-text u-text-1">
+        <li>Название: {{data["info"].dispatch_group_name}}</li>
+        <li>Количество блоков: {{data["info"].count}}</li>
+        <li>Кол-во назначенных блоков: {{data["info"].assigned_count}}</li>
+        <li>Кол-во свободных блоков: {{data["info"].free_count}}</li>
+    </ul>
+    <a href="#" onclick="changeStateOfDispatchGroup('{{data["info"].dispatch_group_name}}','{{data["state"]["value"]}}')">{{data["state"]["text"]}}</a>
 </div>

@@ -126,11 +126,11 @@
                                     </div>
                                     <div class="u-container-style u-layout-cell u-size-40 u-layout-cell-2">
                                         <div class="u-container-layout u-valign-top u-container-layout-3">
-                                            <ul class="u-text u-text-1">
-                                                <div id="dispatch-group-info">
+                                            <div id="dispatch-group-info">
+                                                <ul class="u-text u-text-1">
                                                     <li>Для получения информации, выберите рассылку</li>
-                                                </div>
-                                            </ul>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -181,8 +181,8 @@
                                             <option>9</option>
                                         </datalist>
                                         <input type="text" id="select-1ff5" name="groupSize" list="groupSizeVariants"
-                                                class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-radius-5 u-white"
-                                                required="required" />
+                                               class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-radius-5 u-white"
+                                               required="required"/>
                                     </div>
                                 </div>
                                 <div class="u-form-checkbox u-form-group u-form-group-5">
@@ -219,10 +219,23 @@
     getGroupInfo = function (grId) {
         $.ajax({
             type: "GET",
-            url: "/api/lists/"+grId,
+            url: "/api/lists/" + grId,
             data: "",
-            success: function(data){
+            success: function (data) {
                 $("#dispatch-group-info").replaceWith(data)
+            }
+        });
+    }
+    changeStateOfDispatchGroup = function (grId, changeAt) {
+        $.ajax({
+            type: "POST",
+            url: "/api/lists/" + grId + "/state",
+            data: JSON.stringify({"state": changeAt}),
+            success: function (data) {
+                getGroupInfo(data.gr_name);
+            },
+            error: function () {
+                alert("Не удалось обновить статус, попробуйте позже");
             }
         });
     }

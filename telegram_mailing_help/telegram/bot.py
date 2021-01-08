@@ -50,12 +50,18 @@ class MailingBot:
                 [[InlineKeyboardButton(text="Попробовать еще раз",
                                        callback_data="get_dispatch_group_names")]]))
         else:
-            text = "Выберите рассылку из предложенных, %s:" % user.name
-            message.reply_text(text,
-                               reply_markup=InlineKeyboardMarkup(
-                                   [[InlineKeyboardButton(text=groupName,
-                                                          callback_data="get_links_from: %s" % groupName)]
-                                    for groupName in self.db.getEnabledDispatchGroupNames()]))
+            buttons = [[InlineKeyboardButton(text=groupName,
+                                             callback_data="get_links_from: %s" % groupName)]
+                       for groupName in self.db.getEnabledDispatchGroupNames()]
+            if buttons:
+                text = "Выберите рассылку из предложенных, %s:" % user.name
+                message.reply_text(text,
+                                   reply_markup=InlineKeyboardMarkup(buttons))
+            else:
+                text = "\U000026A0 На текущий момент нет ни одной активной рассылки, уточните почему, у куратора"
+                message.reply_text(text, reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton(text="Попробовать еще раз",
+                                           callback_data="get_dispatch_group_names")]]))
         if update.callback_query:
             update.callback_query.answer()
 

@@ -110,7 +110,7 @@ def test_get_info_about_dispatch_group():
     for item in [item1, item2, item3]:
         dao.saveDispatchList(item)
     assert dao.getDispatchGroupInfo(gr_name) == DispatchGroupInfo(dispatch_group_name=gr_name, count=3,
-                                                                  assigned_count=1, free_count=2)
+                                                                  assigned_count=1, free_count=2, enabled=True)
     assert dao.getDispatchGroupInfo(gr_name + "_failed") is None
 
 
