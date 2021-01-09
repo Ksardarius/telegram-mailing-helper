@@ -82,7 +82,7 @@ def test_get_dispatch_groups():
         dao.saveDispatchList(item)
 
     assert dao.freeQuery("select count(*) from DISPATCH_LIST")[0][0] == 3
-    assert sorted(list(dao.getAllDispatchGroupNames())) == ["gr1", "gr2"]
+    assert sorted(map(lambda x: x.dispatch_group_name, list(dao.getAllDispatchGroupNames()))) == ["gr1", "gr2"]
 
 
 def test_get_info_about_dispatch_group():
@@ -109,8 +109,8 @@ def test_get_info_about_dispatch_group():
         created=datetime.now().isoformat())
     for item in [item1, item2, item3]:
         dao.saveDispatchList(item)
-    assert dao.getDispatchGroupInfo(gr_name) == DispatchGroupInfo(dispatch_group_name=gr_name, count=3,
-                                                                  assigned_count=1, free_count=2, enabled=True)
+    assert dao.getDispatchGroupInfo(gr_name) == DispatchGroupInfo(dispatch_group_name=gr_name, description="test_data",
+                                                                  count=3, assigned_count=1, free_count=2, enabled=True)
     assert dao.getDispatchGroupInfo(gr_name + "_failed") is None
 
 

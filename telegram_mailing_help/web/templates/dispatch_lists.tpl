@@ -8,6 +8,7 @@
     <meta name="page_type" content="np-template-header-footer-from-plugin">
     <title>dispatch_lists</title>
     <link rel="stylesheet" href="nicepage.css" media="screen">
+    <link rel="stylesheet" href="nicepage-custom.css" media="screen">
     <link rel="stylesheet" href="dispatch_lists.css" media="screen">
     <script class="u-script" type="text/javascript" src="jquery-1.9.1.min.js" defer=""></script>
     <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
@@ -118,9 +119,9 @@
                                 <div class="u-layout-row">
                                     <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-1">
                                         <div class="u-container-layout u-container-layout-2">
-                                            %for name in dispatchGroupNames:
-                                            <a style="width: 100%" href="#" onclick="getGroupInfo('{{name}}')"
-                                               class="u-border-5 u-border-black u-btn u-btn-round u-button-style u-hover-black u-none u-radius-9 u-text-black u-text-hover-white u-btn-1">{{name}}</a>
+                                            %for info in dispatchGroupNames:
+                                            <a style="width: 100%" href="#" onclick="getGroupInfo('{{info.dispatch_group_name}}')"
+                                               class="u-border-5 {{'u-border-green' if info.enabled else 'u-border-red'}} u-btn u-btn-round u-button-style u-hover-black u-none u-radius-9 u-text-black u-text-hover-white u-btn-1">{{info.dispatch_group_name}}</a>
                                             %end
                                         </div>
                                     </div>

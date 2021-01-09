@@ -22,11 +22,11 @@ class MailingBot:
         self.dispatcher = self.updater.dispatcher
         start_handler = CommandHandler('start', self.commandStart)
         self.dispatcher.add_handler(start_handler)
-        getDispatchGroupNames_handler = CallbackQueryHandler(pattern=r"^get_dispatch_group_names$",
-                                                             callback=self.getDispatchGroupNames)
-        self.dispatcher.add_handler(getDispatchGroupNames_handler)
-        getLinksFrom_handler = CallbackQueryHandler(pattern=r"^get_links_from: (.+)$", callback=self.getLinksFrom)
-        self.dispatcher.add_handler(getLinksFrom_handler)
+        self.dispatcher.add_handler(
+            CallbackQueryHandler(pattern=r"^get_dispatch_group_names$", callback=self.getDispatchGroupNames))
+        self.dispatcher.add_handler(CallbackQueryHandler(pattern=r"^get_links_from: (.+)$", callback=self.getLinksFrom))
+        self.dispatcher.add_handler(
+            CallbackQueryHandler(pattern=r"^get_description_for: (.+)$", callback=self.getDescriptionFor))
 
         unknown_handler = MessageHandler(Filters.command, self.unknown)
         self.dispatcher.add_handler(unknown_handler)
@@ -50,8 +50,10 @@ class MailingBot:
                 [[InlineKeyboardButton(text="Попробовать еще раз",
                                        callback_data="get_dispatch_group_names")]]))
         else:
-            buttons = [[InlineKeyboardButton(text=groupName,
-                                             callback_data="get_links_from: %s" % groupName)]
+            buttons = [[InlineKeyboardButton(text=groupName.dispatch_group_name,
+                                             callback_data="get_links_from: %s" % groupName.dispatch_group_name),
+                        InlineKeyboardButton(text="\U00002753 Описание \U00002753",
+                                             callback_data="get_description_for: %s" % groupName.dispatch_group_name)]
                        for groupName in self.db.getEnabledDispatchGroupNames()]
             if buttons:
                 text = "Выберите рассылку из предложенных, %s:" % user.name
@@ -93,10 +95,25 @@ class MailingBot:
         else:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
 
+    def getDescriptionFor(self, update: Update, context):
+        message = update.message or update.callback_query.message
+        user = self.db.getUserByTelegramId(str(message.chat.id))
+        if UserState(user.state) == UserState.CONFIRMED:
+            dispatchListGroupName = update.callback_query.data[len("get_description_for: "):]
+            text = self.db.getDispatchGroupInfo(dispatchListGroupName).description
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     text="Описание для <b style='text-align: center;'>%s</b>: %s" %
+                                          (dispatchListGroupName, text),
+                                     parse_mode=ParseMode.HTML)
+            update.callback_query.answer()
+        else:
+            message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
+
     def getDispatchGroupNames(self, update: Update, context):
         self.commandStart(update, context)
 
     def start(self):
+        # self.updater.start_webhook()
         self.updater.start_polling()
 
     def stop(self):

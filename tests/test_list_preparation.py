@@ -56,7 +56,7 @@ def test_enough_data():
     common_count_of_rows = links_count // group_size + (bool(links_count % group_size) * 1)
     assert result == common_count_of_rows
     assert dao.getDispatchGroupInfo(dispatch_group_name).free_count == common_count_of_rows
-    assert dispatch_group_name in list(dao.getAllDispatchGroupNames())
+    assert dispatch_group_name in map(lambda x: x.dispatch_group_name, list(dao.getAllDispatchGroupNames()))
 
 
 def test_assign_dispatch_lists():

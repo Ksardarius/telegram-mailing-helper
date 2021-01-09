@@ -53,9 +53,17 @@ class DispatchListItem:
 @dataclass
 class DispatchGroupInfo:
     dispatch_group_name: str
+    description: str
     count: int
     assigned_count: int
     free_count: int
+    enabled: bool
+
+
+@dataclass
+class DispatchGroupNameInfo:
+    dispatch_group_name: str
+    description: str
     enabled: bool
 
 
@@ -190,20 +198,21 @@ class Dao:
                 yield DispatchListItem(*row)
 
     def getAllDispatchGroupNames(self):
-        result = self.worker.execute("SELECT DISTINCT(dispatch_group_name) from DISPATCH_LIST")
+        result = self.worker.execute("SELECT dispatch_group_name, description, enabled  FROM DISPATCH_LIST GROUP BY dispatch_group_name;")
         if len(result) == 0:
             return []
         else:
             for row in result:
-                yield row[0]
+                yield DispatchGroupNameInfo(*row)
 
     def getEnabledDispatchGroupNames(self):
-        result = self.worker.execute("SELECT DISTINCT(dispatch_group_name) from DISPATCH_LIST WHERE enabled = 1")
+        result = self.worker.execute(
+            "SELECT dispatch_group_name, description, enabled FROM DISPATCH_LIST WHERE enabled = 1 GROUP BY dispatch_group_name;")
         if len(result) == 0:
             return []
         else:
             for row in result:
-                yield row[0]
+                yield DispatchGroupNameInfo(*row)
 
     def enableDispatchGroupName(self, dispatch_group_name):
         self.worker.execute("UPDATE DISPATCH_LIST SET enabled=1,_version=_version+1 WHERE dispatch_group_name=?",
@@ -215,7 +224,7 @@ class Dao:
 
     def getDispatchGroupInfo(self, dispatch_group_name):
         result = self.worker.execute(
-            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned),enabled FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
+            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned),enabled,description FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
             values=(dispatch_group_name,))
         if len(result) == 0:
             return None
@@ -226,5 +235,6 @@ class Dao:
                 count=row[1],
                 assigned_count=row[2],
                 free_count=row[1] - row[2],
-                enabled=bool(row[3])
+                enabled=bool(row[3]),
+                description=row[4]
             )
