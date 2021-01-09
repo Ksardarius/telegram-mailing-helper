@@ -277,6 +277,14 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "systemd"
+version = "0.16.1"
+description = "Python systemd wrapper"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "tabulate"
 version = "0.8.7"
 description = "Pretty-print tabular data"
@@ -359,7 +367,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b88783d7526d94dbaeefa55ca29ec68fb078c30f248c59afc047c46569f696cb"
+content-hash = "47391736f37bc28c8e5f282d737d50ce5e7f9f175f3ebe9b2cfadaec6424bc05"
 
 [metadata.files]
 apscheduler = [
@@ -540,6 +548,9 @@ sqlite3worker = [
 sqlparse = [
     {file = "sqlparse-0.4.1-py3-none-any.whl", hash = "sha256:017cde379adbd6a1f15a61873f43e8274179378e95ef3fede90b5aa64d304ed0"},
     {file = "sqlparse-0.4.1.tar.gz", hash = "sha256:0f91fd2e829c44362cbcfab3e9ae12e22badaa8a29ad5ff599f9ec109f0454e8"},
+]
+systemd = [
+    {file = "systemd-0.16.1.tar.gz", hash = "sha256:f44a02434cb1e6ff686bc7d25a7a665cc7af665965e933df3e76fa02d351a75b"},
 ]
 tabulate = [
     {file = "tabulate-0.8.7-py3-none-any.whl", hash = "sha256:ac64cb76d53b1231d364babcd72abbb16855adac7de6665122f97b593f1eb2ba"},

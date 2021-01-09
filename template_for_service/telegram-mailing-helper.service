@@ -1,0 +1,13 @@
+#1. copy this file into /etc/systemd/system, do not forget correct path into ExecStart command
+#2. exec "systemctl daemon-reload"
+#3. exec "systemctl enable jira-search-helper"
+#4. start service "service jira-search-helper start"
+[Unit]
+Before=network.target
+[Service]
+Type=notify
+ExecStart=sh -c 'cd %WORKDIR%/telegram-mailing-helper;exec poetry run python ./telegram_mailing_help/main.py /opt/telegram-mailing-helper/config.json'
+Restart=on-failure
+User=%USER%
+[Install]
+WantedBy=multi-user.target

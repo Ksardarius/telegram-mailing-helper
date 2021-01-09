@@ -5,6 +5,7 @@ if use_gevent:
     monkey.patch_all()
 
 import logging
+import systemd.daemon
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] %(message)s')
@@ -14,5 +15,9 @@ from telegramMailingHelper import TelegramMailingHelper
 log = logging.getLogger()
 
 if __name__ == '__main__':
+    log.info('Starting up ...')
     TelegramMailingHelper()
-    sleep(3600)
+    log.info('Startup complete')
+    systemd.daemon.notify(systemd.daemon.Notification.READY)
+    while True:
+        sleep(100)
