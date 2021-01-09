@@ -1,6 +1,7 @@
-from telegram_mailing_help import use_gevent
+from telegram_mailing_help.appConfig import prepareConfig
 
-if use_gevent:
+config = prepareConfig()
+if config.server.engine == "gevent":
     from gevent import monkey
 
     monkey.patch_all()
@@ -8,10 +9,6 @@ if use_gevent:
 import logging
 from logging.handlers import RotatingFileHandler
 import systemd.daemon
-
-from telegram_mailing_help.appConfig import prepareConfig
-
-config = prepareConfig()
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] %(message)s',

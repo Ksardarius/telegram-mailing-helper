@@ -7,9 +7,8 @@ from functools import wraps
 from bottle import BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, run as run_bottle
 
 BaseRequest.MEMFILE_MAX = 1024 * 1024 * 1024 * 10
-
+from telegram_mailing_help.appConfig import ApplicationConfiguration
 from telegram_mailing_help import __version__
-from telegram_mailing_help import use_gevent
 from telegram_mailing_help.db.dao import Dao, UserState
 from telegram_mailing_help.logic.listPreparation import Preparation
 
@@ -100,7 +99,7 @@ def confirmUser():
 
 class BottleServer(threading.Thread):
 
-    def __init__(self, config, dao: Dao, preparationList: Preparation):
+    def __init__(self, config: ApplicationConfiguration, dao: Dao, preparationList: Preparation):
         global db, preparation
         threading.Thread.__init__(self, name=__name__)
         db = dao
@@ -138,6 +137,6 @@ class BottleServer(threading.Thread):
         server.install(self.logToLogger)
         run_bottle(host=self.config.server.host,
                    port=self.config.server.port,
-                   server="gevent" if use_gevent else "wsgiref",
+                   server=self.config.server.engine,
                    plugins=[self.logToLogger],
                    quiet=True)

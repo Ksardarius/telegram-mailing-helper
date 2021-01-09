@@ -1,7 +1,8 @@
 # /usr/bin/env poetry run
-import os
+import sys
 from logging import getLogger
 from signal import SIGINT, SIGTERM, SIGABRT, signal
+from time import sleep
 
 import systemd.daemon
 
@@ -18,10 +19,18 @@ log = getLogger()
 class TelegramMailingHelper:
 
     def signal_handler(self, signum, frame) -> None:
-        self.telegramBot.stop()
+
+        while True:
+            try:
+                self.telegramBot.stop()
+                break
+            except Exception:
+                log.exception("Exception while stop telegram bot")
+            log.info("Sleep 1 second...")
+            sleep(1)
         log.info("Application stopped")
         systemd.daemon.notify(systemd.daemon.Notification.STOPPING)
-        os._exit(1)
+        sys.exit()
 
     def __init__(self, appConfig: ApplicationConfiguration):
         log.info("Start the application")
