@@ -41,7 +41,7 @@ class MailingBot:
                 user = User(
                     id=None,
                     telegram_id=str(message.chat.id),
-                    name="%s %s" % (message.chat.first_name, message.chat.last_name),
+                    name="%s %s (%s)" % (message.chat.first_name, message.chat.last_name, message.chat.username),
                     state=UserState.NEW.value,
                     created=datetime.now().isoformat()
                 )
