@@ -3,6 +3,8 @@ import os
 from logging import getLogger
 from signal import SIGINT, SIGTERM, SIGABRT, signal
 
+import systemd.daemon
+
 import telegram_mailing_help.db.migration as db
 from telegram_mailing_help.appConfig import ApplicationConfiguration
 from telegram_mailing_help.db.dao import Dao
@@ -19,6 +21,7 @@ class TelegramMailingHelper:
     def signal_handler(self, signum, frame) -> None:
         self.telegramBot.stop()
         log.info("Application stopped")
+        systemd.daemon.notify(systemd.daemon.Notification.STOPPING)
         os._exit(1)
 
     def __init__(self, appConfig: ApplicationConfiguration):
