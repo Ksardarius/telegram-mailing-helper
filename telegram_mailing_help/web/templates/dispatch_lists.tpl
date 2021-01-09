@@ -149,8 +149,8 @@
                                 <input type="hidden" id="pageId" name="pageId" value="186721">
                                 <div class="u-form-group u-form-name">
                                     <datalist id="dispatchGroupNames">
-                                        %for name in dispatchGroupNames:
-                                        <option>{{name}}</option>
+                                        %for info in dispatchGroupNames:
+                                        <option>{{info.dispatch_group_name}}</option>
                                         %end
                                     </datalist>
                                     <label for="name-3b9a" class="u-form-control-hidden u-label">Name</label>
