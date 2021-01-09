@@ -15,13 +15,14 @@ from telegram_mailing_help.db.config import Configuration
 from telegram_mailing_help.db.dao import Dao, User, UserState, DispatchListItem
 from telegram_mailing_help.db.migration import Migration
 from telegram_mailing_help.logic.listPreparation import Preparation
-from telegram_mailing_help.telegramMailingHelper import ApplicationConfiguration
+from telegram_mailing_help.appConfig import ApplicationConfiguration
 
 log = logging.getLogger()
 
 config = ApplicationConfiguration(
     rootConfigDir='',
     telegramToken='empty',
+    logFileName='/tmp/test_log.log',
     db=Configuration(dbFile=tempfile.gettempdir() + "/test_migration_%s.db" % uuid.uuid4()))
 m = Migration(config)
 m.migrate()

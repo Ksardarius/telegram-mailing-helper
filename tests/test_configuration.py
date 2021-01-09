@@ -5,7 +5,7 @@ import pytest
 from dacite import from_dict, MissingValueError, WrongTypeError
 from pytest import mark
 
-import telegram_mailing_help.telegramMailingHelper as telegramMailingHelper
+from telegram_mailing_help.appConfig import ApplicationConfiguration
 
 testConfiguration = '''
 {
@@ -13,7 +13,8 @@ testConfiguration = '''
         "dbFile": "%(dbfile)s"
         },
     "rootConfigDir": "%(rootconfigdir)s",
-    "telegramToken": "token"
+    "telegramToken": "token",
+    "logFileName": "logFileName"
 }
 '''
 
@@ -27,14 +28,14 @@ testConfiguration = '''
     {"dbfile": "/", "rootconfigdir": "ЛЛЛЛ"}
 ])
 def test_config_db_file(replace):
-    configuration = from_dict(telegramMailingHelper.ApplicationConfiguration, loads(testConfiguration % replace))
+    configuration = from_dict(ApplicationConfiguration, loads(testConfiguration % replace))
     assert configuration.db.dbFile == replace["dbfile"]
     assert configuration.rootConfigDir == replace["rootconfigdir"]
 
 
 def test_rootConfigDir_is_null():
     with pytest.raises(WrongTypeError):
-        from_dict(telegramMailingHelper.ApplicationConfiguration,
+        from_dict(ApplicationConfiguration,
                   loads('''{"rootConfigDir":null,"telegramToken":"zzz"}''')).rootConfigDir is None
     with pytest.raises(MissingValueError):
-        assert from_dict(telegramMailingHelper.ApplicationConfiguration, loads('''{}''')).rootConfigDir is None
+        assert from_dict(ApplicationConfiguration, loads('''{}''')).rootConfigDir is None

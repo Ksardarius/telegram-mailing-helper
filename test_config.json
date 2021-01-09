@@ -5,5 +5,6 @@
   "server": {
   },
   "rootConfigDir": "../data/",
-  "telegramToken": "inputTelTokenHere"
+  "telegramToken": "inputTelTokenHere",
+  "logFileName": "/tmp/tel_mai_helper_test.log"
 }
