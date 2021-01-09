@@ -17,7 +17,6 @@ log = getLogger()
 
 class TelegramMailingHelper:
 
-    @staticmethod
     def signal_handler(self, signum, frame) -> None:
         self.telegramBot.stop()
         log.info("Application stopped")
