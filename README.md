@@ -7,7 +7,7 @@ pip3 install poetry
 ## Installation (example)
 - clone repo from github into /opt:
 ```shell
-telegram-mailing-helper
+WORKDIR=/opt
 sudo mkdir $WORKDIR
 sudo chown $USER:$USER $WORKDIR/telegram-mailing-helper
 cd /opt
