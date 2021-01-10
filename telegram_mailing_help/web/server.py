@@ -95,7 +95,7 @@ def confirmUser():
     db.setStateForUserById(body["id"], UserState.CONFIRMED)
     if userState == UserState.NEW:
         bot.sendFreeMessageToRegisteredUser(int(user.telegram_id), "Поздравляю, теперь у вас есть доступ до бота,"
-                                                                   " давайте начнем сначала /start!")
+                                                                   " давайте начнем сначала, жми /start!")
     return {"success": True}
 
 
