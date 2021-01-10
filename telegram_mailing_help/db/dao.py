@@ -198,7 +198,8 @@ class Dao:
                 yield DispatchListItem(*row)
 
     def getAllDispatchGroupNames(self):
-        result = self.worker.execute("SELECT dispatch_group_name, description, enabled  FROM DISPATCH_LIST GROUP BY dispatch_group_name;")
+        result = self.worker.execute(
+            "SELECT dispatch_group_name, description, enabled  FROM DISPATCH_LIST GROUP BY dispatch_group_name;")
         if len(result) == 0:
             return []
         else:
@@ -221,6 +222,16 @@ class Dao:
     def disableDispatchGroupName(self, dispatch_group_name):
         self.worker.execute("UPDATE DISPATCH_LIST SET enabled=0,_version=_version+1 WHERE dispatch_group_name=?",
                             values=(dispatch_group_name,))
+
+    def getValueFromStorage(self, key):
+        result = self.worker.execute("SELECT value FROM storage WHERE key=?", values=(key,))
+        if len(result) == 0:
+            return None
+        else:
+            return result[0][0]
+
+    def setValueInfoStorage(self, key, value):
+        self.worker.execute("INSERT OR REPLACE INTO STORAGE(key,value) VALUES (?,?)", values=(key, value))
 
     def getDispatchGroupInfo(self, dispatch_group_name):
         result = self.worker.execute(

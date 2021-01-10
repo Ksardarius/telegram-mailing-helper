@@ -105,3 +105,11 @@ def test_assign_dispatch_lists():
     assert dispatchGroupInfo.count == count_of_disp_list, "wrong full value of records"
     assert dispatchGroupInfo.free_count == 0, "there is no free butches should be available"
     assert dispatchGroupInfo.assigned_count == count_of_disp_list, "all butches should be assigned"
+
+
+def test_check_storage():
+    dao.setValueInfoStorage("key", "value")
+    assert dao.getValueFromStorage("key") == "value"
+    dao.setValueInfoStorage("key", "другое value")
+    assert dao.getValueFromStorage("key") == "другое value"
+    assert dao.getValueFromStorage("unavailable") is None
