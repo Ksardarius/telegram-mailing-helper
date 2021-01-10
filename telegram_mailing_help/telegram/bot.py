@@ -14,14 +14,14 @@ log = logging.getLogger("mailingBot")
 
 # unicode codes: https://apps.timwhitlock.info/emoji/tables/unicode
 class MailingBot:
-    def __init__(self, config, db: Dao, preparation: Preparation):
+    def __init__(self, config, db: Dao, preparation: Preparation, ):
         self.db = db
         self.preparation = preparation
         self.daemon = True
         self.updater = Updater(token=config.telegramToken)
         self.dispatcher = self.updater.dispatcher
-        start_handler = CommandHandler('start', self.commandStart)
-        self.dispatcher.add_handler(start_handler)
+        self.dispatcher.add_handler(CommandHandler('start', self.commandMain))
+        self.dispatcher.add_handler(CommandHandler('info', self.commandInfo))
         self.dispatcher.add_handler(
             CallbackQueryHandler(pattern=r"^get_dispatch_group_names$", callback=self.getDispatchGroupNames))
         self.dispatcher.add_handler(CallbackQueryHandler(pattern=r"^get_links_from: (.+)$", callback=self.getLinksFrom))
@@ -31,7 +31,26 @@ class MailingBot:
         unknown_handler = MessageHandler(Filters.command, self.unknown)
         self.dispatcher.add_handler(unknown_handler)
 
-    def commandStart(self, update: Update, context):
+    def commandInfo(self, update: Update, context):
+        message = update.message or update.callback_query.message
+        text = '''Уважаемый волонтёр, этот бот создан для твоего удобства.
+Здесь ты можешь брать нужные тебе отметки и ссылки в любое время дня и ночи!
+В боте будут основные кнопки (такие как Ники, ОК, Ссылки-рассылки) и дополнительные, которые будут периодически меняться, в зависимости от заданий кураторов.
+Прочитать уточняющую информацию о кнопке ты можешь, нажав "\U00002753 Описание \U00002753" рядом с интересующей кнопкой.
+Обрати внимание, что набор кнопок может меняться, поэтому для получения актуального набора кнопок нужно переходить на /start, и тогда ты всегда будешь в курсе последних изменений!
+Данную подсказку ты также можешь получить по команде /info
+Если, все же, у тебя возникли затруднения, ты всегда можешь обратиться за помощью к @cherkashina89'''
+        message.reply_text(text, reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(text="Ок, понятно, иду в бой!",
+                                   callback_data="get_dispatch_group_names")]]))
+        if update.callback_query:
+            update.callback_query.answer()
+
+    def sendFreeMessageToRegisteredUser(self, userId, message):
+        self.updater.bot.send_message(chat_id=userId,
+                                      text=message)
+
+    def commandMain(self, update: Update, context):
         message = update.message or update.callback_query.message
         user = self.db.getUserByTelegramId(str(message.chat.id))
         if user is None or user.state != UserState.CONFIRMED.value:
@@ -50,6 +69,7 @@ class MailingBot:
                 [[InlineKeyboardButton(text="Попробовать еще раз",
                                        callback_data="get_dispatch_group_names")]]))
         else:
+            message.reply_text(text="Инфо по работе бота здесь: /info")
             buttons = [[InlineKeyboardButton(text=groupName.dispatch_group_name,
                                              callback_data="get_links_from: %s" % groupName.dispatch_group_name),
                         InlineKeyboardButton(text="\U00002753 Описание \U00002753",
@@ -110,7 +130,7 @@ class MailingBot:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
 
     def getDispatchGroupNames(self, update: Update, context):
-        self.commandStart(update, context)
+        self.commandMain(update, context)
 
     def start(self):
         # self.updater.start_webhook()

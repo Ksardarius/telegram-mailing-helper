@@ -6,6 +6,8 @@ from functools import wraps
 
 from bottle import BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, run as run_bottle
 
+from telegram_mailing_help.telegram.bot import MailingBot
+
 BaseRequest.MEMFILE_MAX = 1024 * 1024 * 1024 * 10
 from telegram_mailing_help.appConfig import ApplicationConfiguration
 from telegram_mailing_help import __version__
@@ -16,6 +18,7 @@ log = logging.getLogger("bottleServer")
 
 db: Dao = None
 preparation: Preparation = None
+bot: MailingBot = None
 
 
 def _getTemplateFile(templateName):
@@ -86,7 +89,13 @@ def changeStateOfGroupAt(gr_name):
 @post("/api/users/confirm")
 def confirmUser():
     body = json.load(request.body)
+    userId = body["id"]
+    user = db.getUserById(userId)
+    userState = UserState(user.state)
     db.setStateForUserById(body["id"], UserState.CONFIRMED)
+    if userState == UserState.NEW:
+        bot.sendFreeMessageToRegisteredUser(int(user.telegram_id), "Поздравляю, теперь у вас есть доступ до бота,"
+                                                                   " давайте начнем сначала /start!")
     return {"success": True}
 
 
@@ -99,11 +108,12 @@ def confirmUser():
 
 class BottleServer(threading.Thread):
 
-    def __init__(self, config: ApplicationConfiguration, dao: Dao, preparationList: Preparation):
-        global db, preparation
+    def __init__(self, config: ApplicationConfiguration, dao: Dao, preparationList: Preparation, tbot: MailingBot):
+        global db, preparation, bot
         threading.Thread.__init__(self, name=__name__)
         db = dao
         preparation = preparationList
+        bot = tbot
         self.daemon = True
         self.config = config
         # Event to start the exit process.

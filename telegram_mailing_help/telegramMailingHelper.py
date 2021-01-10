@@ -44,7 +44,7 @@ class TelegramMailingHelper:
         self.telegramBot = bot.MailingBot(appConfig, self.dao, self.preparation)
         self.telegramBot.start()
 
-        self.server = server.BottleServer(appConfig, self.dao, self.preparation)
+        self.server = server.BottleServer(appConfig, self.dao, self.preparation, self.telegramBot)
         self.server.start()
 
         for sig in (SIGINT, SIGTERM, SIGABRT):
