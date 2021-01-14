@@ -71,6 +71,16 @@ class MailingBot:
                     created=datetime.now().isoformat()
                 )
                 self.db.saveUser(user)
+                telegramUserIdForNotification = self.db.getValueFromStorage(
+                    "send_notification_about_new_user_to_telegram_id")
+                try:
+                    if telegramUserIdForNotification:
+                        self.sendFreeMessageToRegisteredUser(
+                            int(telegramUserIdForNotification),
+                            "Новый пользователь %(user)s добавился в бот, подтвердить его можно здесь: %(admin_url)s" %
+                            {"user": user.name, "admin_url": self.db.getValueFromStorage("admin_url")})
+                except Exception:
+                    log.exception("Can't send message about new user into %s", telegramUserIdForNotification)
             message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton(text="Попробовать еще раз",
                                        callback_data="get_dispatch_group_names")]]))
