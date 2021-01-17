@@ -154,14 +154,31 @@ class Dao:
             values=(assignId, dispatch_list.id, user.id, AssignState.ASSIGNED.value, datetime.now().isoformat()))
         if self.worker.execute(
                 "SELECT COUNT(dl.id) FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_ASSIGNS dla ON (dla.dispatch_list_id=dl.id ) "
-                "WHERE dl.id =? AND dl._version=? AND dla.users_id =?",
-                values=(dispatch_list.id, dispatch_list._version + 1, user.id))[0][0] != 1:
+                "WHERE dl.id =? AND dl._version=? AND dla.users_id =? AND dl.is_assigned=1 AND dla.state=?",
+                values=(dispatch_list.id, dispatch_list._version + 1, user.id, AssignState.ASSIGNED.value))[0][0] != 1:
             self.worker.execute("DELETE FROM DISPATCH_LIST_ASSIGNS WHERE uuid=?",
                                 values=(assignId,))
             raise OptimisticLockException()
         else:
             dispatch_list._version = dispatch_list._version + 1
             dispatch_list.is_assigned = True
+
+    def freeAssignedBlockFromUser(self, user: User, dispatch_list: DispatchListItem):
+        assignRecord = \
+            self.worker.execute(
+                "SELECT uuid FROM DISPATCH_LIST_ASSIGNS WHERE users_id=? AND dispatch_list_id=? AND state=?",
+                values=(user.id, dispatch_list.id, AssignState.ASSIGNED.value))
+        if assignRecord:
+            assignId = assignRecord[0][0]
+            self.worker.execute("UPDATE DISPATCH_LIST set is_assigned=0, _version=? WHERE id=? and _version=?",
+                                values=(dispatch_list._version + 1, dispatch_list.id, dispatch_list._version))
+
+            self.worker.execute(
+                "UPDATE DISPATCH_LIST_ASSIGNS SET state=?, change_date=? WHERE uuid=?",
+                values=(AssignState.ROLLBACK.value, datetime.now().isoformat(), assignId))
+            dispatch_list._version = dispatch_list._version + 1
+            dispatch_list.is_assigned = False
+        return dispatch_list
 
     def saveDispatchList(self, item: DispatchListItem):
         item._check_sum = hashlib.md5(

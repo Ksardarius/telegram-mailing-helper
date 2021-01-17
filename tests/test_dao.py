@@ -197,3 +197,47 @@ def test_check_storage():
     dao.setValueInfoStorage("key", "другое value")
     assert dao.getValueFromStorage("key") == "другое value"
     assert dao.getValueFromStorage("unavailable") is None
+
+
+def test_assign_and_free_block():
+    dispatchGroup = dao.saveDispatchListGroup(
+        DispatchListGroupItem(
+            id=None,
+            dispatch_group_name="kkkzaanaonostra",
+            social_network="test",
+            description="description"
+        )
+    )
+    dispatchList = dao.saveDispatchList(DispatchListItem(
+        id=None,
+        dispatch_group_id=dispatchGroup.id,
+        links_values_butch="123_%s" % uuid.uuid4(),
+        created=datetime.now().isoformat()
+    ))
+    user = dao.saveUser(User(
+        id=None,
+        telegram_id="tg_id_%s" % uuid.uuid4(),
+        name="test Юзер name",
+        state=UserState.CONFIRMED.value,
+        created=datetime.now().isoformat()
+    ))
+    assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 1
+    dao.assignBlockIntoUser(user, dispatchList)
+    assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 0
+    dao.freeAssignedBlockFromUser(user, dispatchList)
+    assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 1
+    user2 = dao.saveUser(User(
+        id=None,
+        telegram_id="tg_id_%s" % uuid.uuid4(),
+        name="test Юзер name",
+        state=UserState.CONFIRMED.value,
+        created=datetime.now().isoformat()
+    ))
+    dispatchList = dao.getDispatchListById(dispatchList.id)
+    dao.assignBlockIntoUser(user2, dispatchList)
+    assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 0
+    assignsForTestedDispatchList = dao.freeQuery(
+        "Select * from dispatch_list_assigns where dispatch_list_id=%s" % dispatchList.id)
+    assert len(assignsForTestedDispatchList) == 2
+    assert assignsForTestedDispatchList[0][3] == "rollback"
+    assert assignsForTestedDispatchList[1][3] == "assigned"

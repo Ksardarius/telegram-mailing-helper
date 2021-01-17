@@ -38,6 +38,8 @@ class MailingBot:
             CallbackQueryHandler(pattern=r"^get_dispatch_group_names$", callback=self.getDispatchGroupNames))
         self.dispatcher.add_handler(CallbackQueryHandler(pattern=r"^get_links_from: (.+)$", callback=self.getLinksFrom))
         self.dispatcher.add_handler(
+            CallbackQueryHandler(pattern=r"^unassign_link_for: (.+)$", callback=self.unassignLinksItem))
+        self.dispatcher.add_handler(
             CallbackQueryHandler(pattern=r"^get_description_for: (.+)$", callback=self.getDescriptionFor))
 
         unknown_handler = MessageHandler(Filters.command, self.unknown)
@@ -124,20 +126,45 @@ class MailingBot:
                 log.exception(e)
                 dispatchListGroup = self.db.getDispatchListGroupByName(dispatchListGroupId)
 
-            text = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
+            text, dispatchListId = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
                                      parse_mode=ParseMode.HTML)
+            secondLineOfKeybord = [InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
+                                                        callback_data="get_dispatch_group_names")]
+            if dispatchListId:
+                secondLineOfKeybord.append(InlineKeyboardButton(
+                    text="\U0000274C Освободить",
+                    callback_data="unassign_link_for: %s" % dispatchListId))
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
                                                          [
                                                              [InlineKeyboardButton(
                                                                  text="\U000027A1 %s: след. блок" % dispatchListGroup.dispatch_group_name,
                                                                  callback_data="get_links_from: %s" % dispatchListGroup.id)],
-                                                             [InlineKeyboardButton(
-                                                                 text="\U0001F4C3 Выбрать другой список",
-                                                                 callback_data="get_dispatch_group_names")]
+                                                             secondLineOfKeybord
                                                          ]))
+            update.callback_query.answer()
+        else:
+            message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
+
+    def unassignLinksItem(self, update: Update, context):
+        message = update.message or update.callback_query.message
+        user = self.db.getUserByTelegramId(str(message.chat.id))
+        if UserState(user.state) == UserState.CONFIRMED:
+            dispatchListGroupId = int(update.callback_query.data[len("unassign_link_for: "):])
+            unassignedDispatchList = self.preparation.unassignDispatchListFromUser(user, dispatchListGroupId)
+            if unassignedDispatchList and not unassignedDispatchList.is_assigned:
+                text = "<b>Хорошо, блок освобожден, теперь его снова может взять кто-то другой, или вы, если успеете :)</b>"
+            else:
+                text = "<b>Блок не найден, видимо он уже был освобожден</b>"
+            message.reply_text(
+                text=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
+                                           callback_data="get_dispatch_group_names")]])
+            )
             update.callback_query.answer()
         else:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")

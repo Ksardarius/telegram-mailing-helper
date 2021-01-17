@@ -59,6 +59,13 @@ class Preparation:
             countOfAdded += 1
         return countOfAdded
 
+    def unassignDispatchListFromUser(self, user: User, dispatch_list_id: int):
+        with self._assignLock:
+            dispatchList = self.dao.getDispatchListById(dispatch_list_id)
+            if dispatchList and dispatchList.is_assigned:
+                dispatchList = self.dao.freeAssignedBlockFromUser(user, dispatchList)
+        return dispatchList
+
     def getAndAssignDispatchList(self, user: User, dispatch_group_id: int):
         with self._assignLock:
             attempt = 1
@@ -75,7 +82,7 @@ class Preparation:
                 attempt += 1
 
             if item:
-                return item.links_values_butch
+                return (item.links_values_butch, item.id)
             else:
-                return "Свободных блоков для данного списка больше нет," \
-                       " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка"
+                return ("Свободных блоков для данного списка больше нет," \
+                        " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка", None)
