@@ -134,7 +134,7 @@ class MailingBot:
                                                         callback_data="get_dispatch_group_names")]
             if dispatchListId:
                 secondLineOfKeybord.append(InlineKeyboardButton(
-                    text="\U0000274C Освободить",
+                    text="\U0000274C Вернуть",
                     callback_data="unassign_link_for: %s" % dispatchListId))
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
@@ -155,9 +155,9 @@ class MailingBot:
             dispatchListGroupId = int(update.callback_query.data[len("unassign_link_for: "):])
             unassignedDispatchList = self.preparation.unassignDispatchListFromUser(user, dispatchListGroupId)
             if unassignedDispatchList and not unassignedDispatchList.is_assigned:
-                text = "<b>Хорошо, блок освобожден, теперь его снова может взять кто-то другой, или вы, если успеете :)</b>"
+                text = "<b>Хорошо, блок вернулся обратно боту, теперь его снова может взять кто-то другой, или вы, если успеете :)</b>"
             else:
-                text = "<b>Блок не найден, видимо он уже был освобожден</b>"
+                text = "<b>Блок не найден, видимо он уже был возвращен</b>"
             message.reply_text(
                 text=text,
                 parse_mode=ParseMode.HTML,
