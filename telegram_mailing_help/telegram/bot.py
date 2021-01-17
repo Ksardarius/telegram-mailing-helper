@@ -87,9 +87,9 @@ class MailingBot:
         else:
             message.reply_text(text="Инфо по работе бота здесь: /info")
             buttons = [[InlineKeyboardButton(text=groupName.dispatch_group_name,
-                                             callback_data="get_links_from: %s" % groupName.dispatch_group_name),
+                                             callback_data="get_links_from: %s" % groupName.id),
                         InlineKeyboardButton(text="\U00002753 Описание \U00002753",
-                                             callback_data="get_description_for: %s" % groupName.dispatch_group_name)]
+                                             callback_data="get_description_for: %s" % groupName.id)]
                        for groupName in self.db.getEnabledDispatchGroupNames()]
             if buttons:
                 text = "Выберите рассылку из предложенных, %s:" % user.name
@@ -112,17 +112,28 @@ class MailingBot:
         message = update.message or update.callback_query.message
         user = self.db.getUserByTelegramId(str(message.chat.id))
         if UserState(user.state) == UserState.CONFIRMED:
-            dispatchListGroupName = update.callback_query.data[len("get_links_from: "):]
-            text = self.preparation.getAndAssignDispatchList(user, dispatchListGroupName)
+            dispatchListGroupId = update.callback_query.data[len("get_links_from: "):]
+            # !!! for backward compability, SHOULD BE REMOVED!!!!
+            try:
+                dispatchListGroupId = int(dispatchListGroupId)
+                dispatchListGroup = self.db.getDispatchListGroupById(dispatchListGroupId)
+            except Exception as e:
+                log.warning(
+                    "Can't cast dispatchListGroupId: %s into integer, maybe used old button's callback,"
+                    " try find by group name", dispatchListGroupId)
+                log.exception(e)
+                dispatchListGroup = self.db.getDispatchListGroupByName(dispatchListGroupId)
+
+            text = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
             context.bot.send_message(chat_id=update.effective_chat.id,
-                                     text="<b style='text-align: center;'>%s:</b>" % dispatchListGroupName,
+                                     text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
                                      parse_mode=ParseMode.HTML)
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
                                                          [
                                                              [InlineKeyboardButton(
-                                                                 text="\U000027A1 %s: след. блок" % dispatchListGroupName,
-                                                                 callback_data=update.callback_query.data)],
+                                                                 text="\U000027A1 %s: след. блок" % dispatchListGroup.dispatch_group_name,
+                                                                 callback_data="get_links_from: %s" % dispatchListGroup.id)],
                                                              [InlineKeyboardButton(
                                                                  text="\U0001F4C3 Выбрать другой список",
                                                                  callback_data="get_dispatch_group_names")]
@@ -135,11 +146,12 @@ class MailingBot:
         message = update.message or update.callback_query.message
         user = self.db.getUserByTelegramId(str(message.chat.id))
         if UserState(user.state) == UserState.CONFIRMED:
-            dispatchListGroupName = update.callback_query.data[len("get_description_for: "):]
-            text = self.db.getDispatchGroupInfo(dispatchListGroupName).description
+            dispatchListGroupId = int(update.callback_query.data[len("get_description_for: "):])
+            dispatchListGroup = self.db.getDispatchListGroupById(dispatchListGroupId)
+            text = dispatchListGroup.description
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text="Описание для <b style='text-align: center;'>%s</b>: %s" %
-                                          (dispatchListGroupName, text),
+                                          (dispatchListGroup.dispatch_group_name, text),
                                      parse_mode=ParseMode.HTML)
             update.callback_query.answer()
         else:

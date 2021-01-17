@@ -8,7 +8,8 @@
     <meta name="page_type" content="np-template-header-footer-from-plugin">
     <title>users</title>
     <link rel="stylesheet" href="nicepage.css" media="screen">
-<link rel="stylesheet" href="users.css" media="screen">
+    <script type="text/javascript" src="chikagojs.js" defer=""></script>
+    <link rel="stylesheet" href="users.css" media="screen">
     <script class="u-script" type="text/javascript" src="jquery-1.9.1.min.js" defer=""></script>
     <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
     <meta name="generator" content="Nicepage 3.3.5, nicepage.com">
@@ -93,32 +94,6 @@
         </div>
       </div>
     </section>
-    <script lang="js">
-        function confirm(id){
-            $.ajax({
-                type: "POST",
-                url: "/api/users/confirm",
-                data: JSON.stringify({"id": id}),
-                success: function(data){
-                    document.location = "users.html"
-                },
-                contentType:"application/json; charset=utf-8",
-                dataType:"json"
-            });
-        }
-        function block(id){
-            $.ajax({
-                type: "POST",
-                url: "/api/users/block",
-                data: JSON.stringify({"id": id}),
-                success: function(data){
-                    document.location = "users.html"
-                },
-                contentType:"application/json; charset=utf-8",
-                dataType:"json"
-            });
-        }
-    </script>
 
     <footer class="u-align-center u-clearfix u-footer u-grey-80 u-footer" id="sec-f73b"><div class="u-clearfix u-sheet u-sheet-1">
       </div></footer>

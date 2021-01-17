@@ -14,7 +14,7 @@ import logging
 import threading
 from datetime import datetime
 
-from telegram_mailing_help.db.dao import Dao, DispatchListItem, User
+from telegram_mailing_help.db.dao import Dao, DispatchListItem, User, DispatchListGroupItem
 from telegram_mailing_help.db.daoExp import OptimisticLockException
 
 log = logging.getLogger("helperLogic")
@@ -33,15 +33,23 @@ class Preparation:
             yield lst[i:i + n]
 
     def addDispatchList(self, dispatch_group_name: str, description: str, links: list, devideBy: int,
-                        disableByDefault: bool):
+                        disableByDefault: bool, dispatch_group_id: int = None):
+        dispatchListGroup = self.dao.getDispatchListGroupById(dispatch_group_id) if dispatch_group_id \
+            else self.dao.getDispatchListGroupByName(dispatch_group_name)
+        if not dispatchListGroup:
+            dispatchListGroup = DispatchListGroupItem(
+                id=None,
+                dispatch_group_name=dispatch_group_name,
+                social_network=None,
+                description=description
+            )
+            dispatchListGroup = self.dao.saveDispatchListGroup(dispatchListGroup)
         countOfAdded = 0
         dispatchTemplate = DispatchListItem(
             id=None,
-            dispatch_group_name=dispatch_group_name,
+            dispatch_group_id=dispatchListGroup.id,
             links_values_butch=None,
-            description=description,
             is_assigned=False,
-            enabled=not disableByDefault,
             created=datetime.now().isoformat()
         )
         for chunk in self._chunks(links, devideBy):
@@ -51,13 +59,13 @@ class Preparation:
             countOfAdded += 1
         return countOfAdded
 
-    def getAndAssignDispatchList(self, user: User, dispatch_group_name: str):
+    def getAndAssignDispatchList(self, user: User, dispatch_group_id: int):
         with self._assignLock:
             attempt = 1
             item = None
             while attempt < 5:
                 try:
-                    item = self.dao.getFreeDispatchListItem(dispatch_group_name)
+                    item = self.dao.getFreeDispatchListItem(dispatch_group_id)
                     if item:
                         self.dao.assignBlockIntoUser(user, item)
                     break

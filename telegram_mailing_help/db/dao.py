@@ -52,18 +52,26 @@ class UserState(Enum):
 @dataclass
 class DispatchListItem:
     id: Optional[int]
-    dispatch_group_name: str
+    dispatch_group_id: int
     links_values_butch: str
-    description: str
     created: str
-    enabled: bool = True
     _check_sum: str = None
     _version: int = 0
     is_assigned: bool = False
 
 
 @dataclass
+class DispatchListGroupItem:
+    id: Optional[int]
+    dispatch_group_name: str
+    social_network: Optional[str]
+    description: str
+    enabled: bool = True
+
+
+@dataclass
 class DispatchGroupInfo:
+    id: int
     dispatch_group_name: str
     description: str
     count: int
@@ -74,6 +82,7 @@ class DispatchGroupInfo:
 
 @dataclass
 class DispatchGroupNameInfo:
+    id: int
     dispatch_group_name: str
     description: str
     enabled: bool
@@ -127,10 +136,10 @@ class Dao:
                     raise OptimisticLockException()
         return item
 
-    def getFreeDispatchListItem(self, dispatch_group_name):
+    def getFreeDispatchListItem(self, dispatch_group_id):
         result = self.worker.execute(
-            "SELECT * from DISPATCH_LIST WHERE dispatch_group_name=? AND is_assigned=0 LIMIT 1",
-            values=(dispatch_group_name,))
+            "SELECT * from DISPATCH_LIST WHERE dispatch_group_id=? AND is_assigned=0 LIMIT 1",
+            values=(dispatch_group_id,))
         if len(result) != 1:
             return None
         else:
@@ -156,8 +165,11 @@ class Dao:
 
     def saveDispatchList(self, item: DispatchListItem):
         item._check_sum = hashlib.md5(
-            bytearray(item.links_values_butch + item.dispatch_group_name, encoding="utf-8")).hexdigest()
+            bytearray(item.links_values_butch + str(item.dispatch_group_id), encoding="utf-8")).hexdigest()
         return self.__saveEntity("DISPATCH_LIST", item, useVersion=True)
+
+    def saveDispatchListGroup(self, item: DispatchListGroupItem):
+        return self.__saveEntity("DISPATCH_LIST_GROUP", item, useVersion=False)
 
     def saveUser(self, item: User):
         return self.__saveEntity("USERS", item)
@@ -176,6 +188,23 @@ class Dao:
             rez = None
         else:
             rez = User(*result[0])
+        return rez
+
+    def getDispatchListGroupById(self, id: int):
+        result = self.worker.execute("SELECT * from DISPATCH_LIST_GROUP where id=?", values=(id,))
+        if len(result) != 1:
+            rez = None
+        else:
+            rez = DispatchListGroupItem(*result[0])
+        return rez
+
+    def getDispatchListGroupByName(self, dispatch_group_name: str):
+        result = self.worker.execute("SELECT * from DISPATCH_LIST_GROUP where dispatch_group_name=? LIMIT 1",
+                                     values=(dispatch_group_name,))
+        if len(result) != 1:
+            rez = None
+        else:
+            rez = DispatchListGroupItem(*result[0])
         return rez
 
     def confirmUserById(self, id: int):
@@ -200,9 +229,9 @@ class Dao:
             for row in result:
                 yield User(*row)
 
-    def getDispatchListByDispatchGroupName(self, dispatch_group_name: str):
-        result = self.worker.execute("SELECT * from DISPATCH_LIST where dispatch_group_name=?",
-                                     values=(dispatch_group_name,))
+    def getDispatchListByDispatchGroupId(self, dispatch_group_id: int):
+        result = self.worker.execute("SELECT * from DISPATCH_LIST where dispatch_group_id=?",
+                                     values=(dispatch_group_id,))
         if len(result) == 0:
             return None
         else:
@@ -211,7 +240,7 @@ class Dao:
 
     def getAllDispatchGroupNames(self):
         result = self.worker.execute(
-            "SELECT dispatch_group_name, description, enabled  FROM DISPATCH_LIST GROUP BY dispatch_group_name;")
+            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP;")
         if len(result) == 0:
             return []
         else:
@@ -220,20 +249,20 @@ class Dao:
 
     def getEnabledDispatchGroupNames(self):
         result = self.worker.execute(
-            "SELECT dispatch_group_name, description, enabled FROM DISPATCH_LIST WHERE enabled = 1 GROUP BY dispatch_group_name;")
+            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP WHERE enabled = 1;")
         if len(result) == 0:
             return []
         else:
             for row in result:
                 yield DispatchGroupNameInfo(*row)
 
-    def enableDispatchGroupName(self, dispatch_group_name):
-        self.worker.execute("UPDATE DISPATCH_LIST SET enabled=1,_version=_version+1 WHERE dispatch_group_name=?",
-                            values=(dispatch_group_name,))
+    def enableDispatchGroupName(self, dispatch_group_id):
+        self.worker.execute("UPDATE DISPATCH_LIST_GROUP SET enabled=1 WHERE id=?",
+                            values=(dispatch_group_id,))
 
-    def disableDispatchGroupName(self, dispatch_group_name):
-        self.worker.execute("UPDATE DISPATCH_LIST SET enabled=0,_version=_version+1 WHERE dispatch_group_name=?",
-                            values=(dispatch_group_name,))
+    def disableDispatchGroupName(self, dispatch_group_id):
+        self.worker.execute("UPDATE DISPATCH_LIST_GROUP SET enabled=0 WHERE id=?",
+                            values=(dispatch_group_id,))
 
     def getValueFromStorage(self, key):
         result = self.worker.execute("SELECT value FROM storage WHERE key=?", values=(key,))
@@ -245,19 +274,20 @@ class Dao:
     def setValueInfoStorage(self, key, value):
         self.worker.execute("INSERT OR REPLACE INTO STORAGE(key,value) VALUES (?,?)", values=(key, value))
 
-    def getDispatchGroupInfo(self, dispatch_group_name):
+    def getDispatchGroupInfo(self, dispatch_group_id):
         result = self.worker.execute(
-            "SELECT dispatch_group_name,COUNT(id),SUM(is_assigned),enabled,description FROM DISPATCH_LIST WHERE dispatch_group_name=? GROUP BY dispatch_group_name",
-            values=(dispatch_group_name,))
+            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
+            values=(dispatch_group_id,))
         if len(result) == 0:
             return None
         else:
             row = result[0]
             return DispatchGroupInfo(
-                dispatch_group_name=row[0],
-                count=row[1],
-                assigned_count=row[2],
-                free_count=row[1] - row[2],
-                enabled=bool(row[3]),
-                description=row[4]
+                id=row[0],
+                dispatch_group_name=row[1],
+                count=row[2],
+                assigned_count=row[3],
+                free_count=row[2] - row[3],
+                enabled=bool(row[4]),
+                description=row[5]
             )

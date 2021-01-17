@@ -74,9 +74,9 @@ def addDispatchList():
     return {"success": True, "countOfAddedItems": countOfAddedDispatchList}
 
 
-@get("/api/lists/<gr_name>")
-def getDispatchGroupInfo(gr_name):
-    info = db.getDispatchGroupInfo(gr_name)
+@get("/api/lists/<gr_id>")
+def getDispatchGroupInfo(gr_id):
+    info = db.getDispatchGroupInfo(gr_id)
     return template(_getTemplateFile("dispatch_group_info.tpl"), data={
         "info": info,
         "state": {
@@ -86,16 +86,26 @@ def getDispatchGroupInfo(gr_name):
     })
 
 
-@post("/api/lists/<gr_name>/state")
-def changeStateOfGroupAt(gr_name):
+@post("/api/lists/<gr_id>/change")
+def changeParamOfGroup(gr_id: int):
+    body = json.load(request.body)
+    dispatchGroup = db.getDispatchListGroupById(gr_id)
+    for (k, v) in body.items():
+        if k is not "id":
+            dispatchGroup.__setattr__(k, v)
+    db.saveDispatchListGroup(dispatchGroup)
+
+
+@post("/api/lists/<gr_id>/state")
+def changeStateOfGroupAt(gr_id):
     body = json.load(request.body)
     if body["state"] == "enable":
-        db.enableDispatchGroupName(gr_name)
+        db.enableDispatchGroupName(gr_id)
     elif body["state"] == "disable":
-        db.disableDispatchGroupName(gr_name)
+        db.disableDispatchGroupName(gr_id)
     else:
-        raise RuntimeError("Unknown state for group: %s : %s" % (gr_name, body["state"]))
-    return {"success": True, "gr_name": gr_name}
+        raise RuntimeError("Unknown state for group: %s : %s" % (gr_id, body["state"]))
+    return {"success": True, "gr_id": gr_id}
 
 
 @post("/api/users/confirm")

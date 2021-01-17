@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="dispatch_lists.css" media="screen">
     <script class="u-script" type="text/javascript" src="jquery-1.9.1.min.js" defer=""></script>
     <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
+    <script type="text/javascript" src="chikagojs.js" defer=""></script>
     <meta name="generator" content="Nicepage 3.3.5, nicepage.com">
     <link id="u-theme-google-font" rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i">
@@ -120,7 +121,8 @@
                                     <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-1">
                                         <div class="u-container-layout u-container-layout-2">
                                             %for info in dispatchGroupNames:
-                                            <a style="width: 100%" href="#" onclick="getGroupInfo('{{info.dispatch_group_name}}')"
+                                            <a style="width: 100%" href="#" id="dispatch_group_button_{{info.id}}"
+                                               onclick="getGroupInfo('{{info.id}}')"
                                                class="u-border-5 {{'u-border-green' if info.enabled else 'u-border-red'}} u-btn u-btn-round u-button-style u-hover-black u-none u-radius-9 u-text-black u-text-hover-white u-btn-1">{{info.dispatch_group_name}}</a>
                                             %end
                                         </div>
@@ -216,30 +218,5 @@
 <footer class="u-align-left u-clearfix u-footer u-grey-80 u-footer" id="sec-f73b">
     <div class="u-clearfix u-sheet u-sheet-1"></div>
 </footer>
-<script lang="js">
-    getGroupInfo = function (grId) {
-        $.ajax({
-            type: "GET",
-            url: "/api/lists/" + grId,
-            data: "",
-            success: function (data) {
-                $("#dispatch-group-info").replaceWith(data)
-            }
-        });
-    }
-    changeStateOfDispatchGroup = function (grId, changeAt) {
-        $.ajax({
-            type: "POST",
-            url: "/api/lists/" + grId + "/state",
-            data: JSON.stringify({"state": changeAt}),
-            success: function (data) {
-                getGroupInfo(data.gr_name);
-            },
-            error: function () {
-                alert("Не удалось обновить статус, попробуйте позже");
-            }
-        });
-    }
-</script>
 </body>
 </html>

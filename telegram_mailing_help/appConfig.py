@@ -20,6 +20,7 @@ import dacite
 import telegram_mailing_help.db.config as configDb
 import telegram_mailing_help.web.config as configServer
 
+_config = None
 
 @dataclass
 class ApplicationConfiguration:
@@ -31,6 +32,7 @@ class ApplicationConfiguration:
 
 
 def prepareConfig():
+    global _config
     configFile = sys.argv[1] if len(sys.argv) > 1 else "../test_config.json"
     with open(configFile) as json_config:
         appConfig = dacite.from_dict(ApplicationConfiguration, json.load(json_config))
@@ -40,4 +42,5 @@ def prepareConfig():
             exec("%s = %s" % (key, os.environ.get(key)))
         except Exception as e:
             print("Can't apply env variable for config: %s because: %s" % (key, e))
+    _config = appConfig
     return appConfig
