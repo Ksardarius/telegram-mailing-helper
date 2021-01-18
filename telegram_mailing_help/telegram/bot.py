@@ -163,6 +163,7 @@ class MailingBot:
                   InlineKeyboardButton(text="\U000026D4 Нет",
                                        callback_data="get_dispatch_group_names")]])
         )
+        update.callback_query.answer()
 
     def unassignLinksItem(self, update: Update, context):
         message = update.message or update.callback_query.message
