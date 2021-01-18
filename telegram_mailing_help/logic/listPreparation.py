@@ -41,7 +41,8 @@ class Preparation:
                 id=None,
                 dispatch_group_name=dispatch_group_name,
                 social_network=None,
-                description=description
+                description=description,
+                enabled=not disableByDefault
             )
             dispatchListGroup = self.dao.saveDispatchListGroup(dispatchListGroup)
         countOfAdded = 0

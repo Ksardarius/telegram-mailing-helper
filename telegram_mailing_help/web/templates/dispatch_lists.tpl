@@ -164,7 +164,7 @@
                                 </div>
                                 <div class="u-form-group">
                                     <label for="email-3b9a" class="u-form-control-hidden u-label">Email</label>
-                                    <input type="text" placeholder="Описание для рассылки" id="email-3b9a"
+                                    <input type="text" placeholder="Описание для рассылки, установится только для новых кнопок!" id="email-3b9a"
                                            name="description"
                                            class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-radius-5 u-white">
                                 </div>
@@ -190,8 +190,7 @@
                                 </div>
                                 <div class="u-form-checkbox u-form-group u-form-group-5">
                                     <input type="checkbox" id="checkbox-0931" name="disableByDefault" value="Off">
-                                    <label for="checkbox-0931" class="u-label">Не добавлять в список возможных для
-                                        использования</label>
+                                    <label for="checkbox-0931" class="u-label">Скрыть кнопку (только для новых кнопок, для сущесвующих останется как есть!)</label>
                                 </div>
                                 <div class="u-align-left u-form-group u-form-submit">
                                     <a href="#" class="u-btn u-btn-submit u-button-style">Добавить<br>

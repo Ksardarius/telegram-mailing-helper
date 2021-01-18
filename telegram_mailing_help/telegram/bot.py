@@ -38,6 +38,8 @@ class MailingBot:
             CallbackQueryHandler(pattern=r"^get_dispatch_group_names$", callback=self.getDispatchGroupNames))
         self.dispatcher.add_handler(CallbackQueryHandler(pattern=r"^get_links_from: (.+)$", callback=self.getLinksFrom))
         self.dispatcher.add_handler(
+            CallbackQueryHandler(pattern=r"^confirm_unassign_link_for: (.+)$", callback=self.confirmUnassignLinksItem))
+        self.dispatcher.add_handler(
             CallbackQueryHandler(pattern=r"^unassign_link_for: (.+)$", callback=self.unassignLinksItem))
         self.dispatcher.add_handler(
             CallbackQueryHandler(pattern=r"^get_description_for: (.+)$", callback=self.getDescriptionFor))
@@ -130,12 +132,13 @@ class MailingBot:
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
                                      parse_mode=ParseMode.HTML)
-            secondLineOfKeybord = [InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
-                                                        callback_data="get_dispatch_group_names")]
+            secondLineOfKeybord = []
             if dispatchListId:
                 secondLineOfKeybord.append(InlineKeyboardButton(
-                    text="\U0000274C Вернуть",
-                    callback_data="unassign_link_for: %s" % dispatchListId))
+                    text="\U000021A9 Вернуть",
+                    callback_data="confirm_unassign_link_for: %s" % dispatchListId))
+            secondLineOfKeybord.append(InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
+                                                            callback_data="get_dispatch_group_names"))
             update.callback_query.message.reply_text(text,
                                                      reply_markup=InlineKeyboardMarkup(
                                                          [
@@ -147,6 +150,19 @@ class MailingBot:
             update.callback_query.answer()
         else:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")
+
+    def confirmUnassignLinksItem(self, update: Update, context):
+        message = update.message or update.callback_query.message
+        dispatchListGroupId = int(update.callback_query.data[len("confirm_unassign_link_for: "):])
+        message.reply_text(
+            text="<b>Вы уверены что хотите вернуть блок обратно боту? Нажмите Да, если не обработали его</b>",
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton(text="\U00002611 Да",
+                                       callback_data="unassign_link_for: %s" % dispatchListGroupId),
+                  InlineKeyboardButton(text="\U000026D4 Нет",
+                                       callback_data="get_dispatch_group_names")]])
+        )
 
     def unassignLinksItem(self, update: Update, context):
         message = update.message or update.callback_query.message
