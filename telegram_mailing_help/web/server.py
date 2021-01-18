@@ -16,7 +16,8 @@ import pathlib
 import threading
 from functools import wraps
 
-from bottle import BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, run as run_bottle
+from bottle import HTTPResponse, BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, \
+    run as run_bottle
 
 from telegram_mailing_help.telegram.bot import MailingBot
 
@@ -155,11 +156,18 @@ class BottleServer(threading.Thread):
                          response.status)
                 return actual_response
             except Exception as e:
-                log.exception("Exception while call %s %s %s %s:",
-                              request.remote_addr,
-                              request.method,
-                              request.url,
-                              response.status)
+                if type(e) is HTTPResponse and e.status_code in [302, 303]:
+                    log.info("redirect %s %s %s %s",
+                             request.remote_addr,
+                             request.method,
+                             request.url,
+                             response.status)
+                else:
+                    log.exception("Exception while call %s %s %s %s:",
+                                  request.remote_addr,
+                                  request.method,
+                                  request.url,
+                                  response.status)
                 raise e
 
         return _logToLogger
