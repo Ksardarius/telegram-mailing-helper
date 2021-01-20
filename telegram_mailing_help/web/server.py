@@ -92,7 +92,7 @@ def changeParamOfGroup(gr_id: int):
     body = json.load(request.body)
     dispatchGroup = db.getDispatchListGroupById(gr_id)
     for (k, v) in body.items():
-        if k is not "id":
+        if k != "id":
             dispatchGroup.__setattr__(k, v)
     db.saveDispatchListGroup(dispatchGroup)
 
@@ -109,24 +109,19 @@ def changeStateOfGroupAt(gr_id):
     return {"success": True, "gr_id": gr_id}
 
 
-@post("/api/users/confirm")
+@post("/api/users/state/change")
 def confirmUser():
     body = json.load(request.body)
     userId = body["id"]
     user = db.getUserById(userId)
     userState = UserState(user.state)
-    db.setStateForUserById(body["id"], UserState.CONFIRMED)
+    newUserState = UserState.CONFIRMED if userState in [UserState.NEW, UserState.BLOCKED] else UserState.BLOCKED
+    user.state = newUserState.value
+    user = db.saveUser(user)
     if userState == UserState.NEW:
         bot.sendFreeMessageToRegisteredUser(int(user.telegram_id), "Поздравляю, теперь у вас есть доступ до бота,"
                                                                    " давайте начнем сначала, жми /start!")
-    return {"success": True}
-
-
-@post("/api/users/block")
-def confirmUser():
-    body = json.load(request.body)
-    db.setStateForUserById(body["id"], UserState.BLOCKED)
-    return {"success": True}
+    return {"success": True, "state": user.state, "localizedState": UserState(user.state).getLocalizedMessage()}
 
 
 class BottleServer(threading.Thread):
@@ -139,10 +134,6 @@ class BottleServer(threading.Thread):
         bot = tbot
         self.daemon = True
         self.config = config
-        # Event to start the exit process.
-        self._exit_event = threading.Event()
-        # Event that closes out the threads.
-        self._close_lock = threading.Lock()
 
     def logToLogger(self, fn):
         @wraps(fn)
@@ -174,7 +165,6 @@ class BottleServer(threading.Thread):
 
     def run(self) -> None:
         server = Bottle()
-        server.install(self.logToLogger)
         run_bottle(host=self.config.server.host,
                    port=self.config.server.port,
                    server=self.config.server.engine,

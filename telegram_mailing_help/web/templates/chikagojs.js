@@ -45,28 +45,16 @@ changeStateOfDispatchGroup = function (grId, changeAt) {
     });
 };
 
-function confirm(id) {
+function changeUserState(id) {
     $.ajax({
         type: "POST",
-        url: "/api/users/confirm",
+        url: "/api/users/state/change",
         data: JSON.stringify({"id": id}),
         success: function (data) {
-            document.location = "users.html"
+            $('#user_state_' + id).html(data["localizedState"]);
         },
         contentType: "application/json; charset=utf-8",
         dataType: "json"
     });
 };
 
-function block(id) {
-    $.ajax({
-        type: "POST",
-        url: "/api/users/block",
-        data: JSON.stringify({"id": id}),
-        success: function (data) {
-            document.location = "users.html"
-        },
-        contentType: "application/json; charset=utf-8",
-        dataType: "json"
-    });
-};

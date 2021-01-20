@@ -40,11 +40,11 @@ class UserState(Enum):
 
     def getLocalizedMessage(self):
         if self == UserState.NEW:
-            return "Новый пользователь"
+            return "\U00002753 Новый пользователь"
         elif self == UserState.CONFIRMED:
-            return "Подтвержденный"
+            return "\U00002705 Подтвержденный"
         elif self == UserState.BLOCKED:
-            return "Заблокированный"
+            return "\U0000274C Заблокированный"
         else:
             raise Exception("Unsupported userState: %s" % self.name)
 
