@@ -53,6 +53,11 @@ def users():
     return template(_getTemplateFile("users.tpl"), users=db.getAllUsers(), userStateCls=UserState)
 
 
+@get("/pages/settings.html")
+def settings():
+    return template(_getTemplateFile("settings.tpl"), settings=db.getAllStorages())
+
+
 @get("/pages/dispatch_lists.html")
 def users():
     return template(_getTemplateFile("dispatch_lists.tpl"), dispatchGroupNames=list(db.getAllDispatchGroupNames()))
@@ -75,7 +80,13 @@ def addDispatchList():
     return {"success": True, "countOfAddedItems": countOfAddedDispatchList}
 
 
-@get("/api/lists/<gr_id>")
+@get("/templates/dispatch_group_buttons")
+def getDispatchGroupButtons():
+    return template(_getTemplateFile("dispatch_group_buttons.tpl"),
+                    dispatchGroupNames=list(db.getAllDispatchGroupNames()))
+
+
+@get("/templates/lists/<gr_id>")
 def getDispatchGroupInfo(gr_id):
     info = db.getDispatchGroupInfo(gr_id)
     return template(_getTemplateFile("dispatch_group_info.tpl"), data={
@@ -122,6 +133,15 @@ def confirmUser():
         bot.sendFreeMessageToRegisteredUser(int(user.telegram_id), "Поздравляю, теперь у вас есть доступ до бота,"
                                                                    " давайте начнем сначала, жми /start!")
     return {"success": True, "state": user.state, "localizedState": UserState(user.state).getLocalizedMessage()}
+
+
+@post("/api/settings/change")
+def confirmUser():
+    body = json.load(request.body)
+    key = body["key"]
+    newValue = body["value"]
+    db.setValueInfoStorage(key, newValue)
+    return {"success": True, "key": key, "value": newValue}
 
 
 class BottleServer(threading.Thread):

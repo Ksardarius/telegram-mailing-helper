@@ -11,6 +11,7 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 import logging
+import threading
 from datetime import datetime
 
 from telegram import InlineKeyboardMarkup, \
@@ -112,6 +113,14 @@ class MailingBot:
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text="Такую команду бот не поддерживает, попробуйте сначала /start")
 
+    def _checkCountOfLeftBlocksAndSendNotification(self, dao: Dao, notifTelegramId, dispatchListGroupId):
+        groupInfo = dao.getDispatchGroupInfo(dispatchListGroupId)
+        if groupInfo.free_count == 5:
+            self.sendFreeMessageToRegisteredUser(
+                notifTelegramId,
+                "\U000026A0 У списка %s осталось 5 свободных блоков, может быть пора добавить новые, добавить можно в админке: %s/pages/dispatch_lists.html" %
+                (groupInfo.dispatch_group_name, dao.getValueFromStorage("admin_url")))
+
     def getLinksFrom(self, update: Update, context):
         message = update.message or update.callback_query.message
         user = self.db.getUserByTelegramId(str(message.chat.id))
@@ -132,6 +141,10 @@ class MailingBot:
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
                                      parse_mode=ParseMode.HTML)
+            notifTelegramId = self.db.getValueFromStorage("send_notification_only_5_blocks_left_to_telegram_id");
+            if (notifTelegramId):
+                threading.Thread(target=self._checkCountOfLeftBlocksAndSendNotification,
+                                 args=(self.db, notifTelegramId, dispatchListGroup.id)).start()
             secondLineOfKeybord = []
             if dispatchListId:
                 secondLineOfKeybord.append(InlineKeyboardButton(

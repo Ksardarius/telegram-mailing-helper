@@ -67,6 +67,7 @@ class DispatchListGroupItem:
     social_network: Optional[str]
     description: str
     enabled: bool = True
+    priority: int = 100
 
 
 @dataclass
@@ -78,6 +79,7 @@ class DispatchGroupInfo:
     assigned_count: int
     free_count: int
     enabled: bool
+    priority: int = 100
 
 
 @dataclass
@@ -95,6 +97,13 @@ class User:
     name: str
     state: str
     created: str
+
+
+@dataclass
+class Storage:
+    key: str
+    value: str
+    description: str
 
 
 class Dao:
@@ -239,12 +248,20 @@ class Dao:
         return rez
 
     def getAllUsers(self):
-        result = self.worker.execute("SELECT * from USERS")
+        result = self.worker.execute("SELECT * from USERS ORDER BY id DESC")
         if len(result) == 0:
             return []
         else:
             for row in result:
                 yield User(*row)
+
+    def getAllStorages(self):
+        result = self.worker.execute("SELECT * from STORAGE")
+        if len(result) == 0:
+            return []
+        else:
+            for row in result:
+                yield Storage(*row)
 
     def getDispatchListByDispatchGroupId(self, dispatch_group_id: int):
         result = self.worker.execute("SELECT * from DISPATCH_LIST where dispatch_group_id=?",
@@ -257,7 +274,7 @@ class Dao:
 
     def getAllDispatchGroupNames(self):
         result = self.worker.execute(
-            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP;")
+            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP ORDER BY priority, dispatch_group_name;")
         if len(result) == 0:
             return []
         else:
@@ -266,7 +283,7 @@ class Dao:
 
     def getEnabledDispatchGroupNames(self):
         result = self.worker.execute(
-            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP WHERE enabled = 1;")
+            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP WHERE enabled = 1 ORDER BY priority, dispatch_group_name;")
         if len(result) == 0:
             return []
         else:
@@ -289,11 +306,11 @@ class Dao:
             return result[0][0]
 
     def setValueInfoStorage(self, key, value):
-        self.worker.execute("INSERT OR REPLACE INTO STORAGE(key,value) VALUES (?,?)", values=(key, value))
+        self.worker.execute("UPDATE STORAGE SET value=? WHERE key=?", values=(value, key))
 
     def getDispatchGroupInfo(self, dispatch_group_id):
         result = self.worker.execute(
-            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
+            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description,dlg.priority FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
             values=(dispatch_group_id,))
         if len(result) == 0:
             return None
@@ -306,5 +323,6 @@ class Dao:
                 assigned_count=row[3],
                 free_count=row[2] - row[3],
                 enabled=bool(row[4]),
-                description=row[5]
+                description=row[5],
+                priority=row[6]
             )

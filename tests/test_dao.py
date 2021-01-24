@@ -6,7 +6,7 @@ from datetime import datetime
 
 from telegram_mailing_help.appConfig import ApplicationConfiguration
 from telegram_mailing_help.db.config import Configuration
-from telegram_mailing_help.db.dao import Dao, UserState, DispatchGroupInfo, DispatchListGroupItem
+from telegram_mailing_help.db.dao import Dao, UserState, DispatchGroupInfo, DispatchListGroupItem, Storage
 from telegram_mailing_help.db.dao import DispatchListItem
 from telegram_mailing_help.db.dao import User
 from telegram_mailing_help.db.migration import Migration
@@ -192,7 +192,7 @@ def test_user_telegram_id_unique_index():
 
 
 def test_check_storage():
-    dao.setValueInfoStorage("key", "value")
+    dao.freeQuery("INSERT INTO STORAGE VALUES ('key','value','description')")
     assert dao.getValueFromStorage("key") == "value"
     dao.setValueInfoStorage("key", "другое value")
     assert dao.getValueFromStorage("key") == "другое value"

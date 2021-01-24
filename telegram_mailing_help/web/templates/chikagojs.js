@@ -1,3 +1,13 @@
+updateDispatchGroupButtons = function () {
+    $.ajax({
+        type: "GET",
+        url: "/templates/dispatch_group_buttons",
+        data: "",
+        success: function (data) {
+            $("#dispatch-group-buttons").replaceWith(data)
+        }
+    });
+}
 editObject = function (field, current, gr_id) {
     let newName = prompt("Укажите новое значение для поля", current)
     if (newName) {
@@ -8,10 +18,8 @@ editObject = function (field, current, gr_id) {
             url: "/api/lists/" + gr_id + "/change",
             data: JSON.stringify(sendData),
             success: function (data) {
-                if (field == "dispatch_group_name") {
-                    $("#dispatch_group_button_" + gr_id).text(newName);
-                }
                 getGroupInfo(gr_id);
+                updateDispatchGroupButtons();
             },
             error: function () {
                 alert("Не удалось обновить статус, попробуйте позже");
@@ -22,7 +30,7 @@ editObject = function (field, current, gr_id) {
 getGroupInfo = function (grId) {
     $.ajax({
         type: "GET",
-        url: "/api/lists/" + grId,
+        url: "/templates/lists/" + grId,
         data: "",
         success: function (data) {
             $("#dispatch-group-info").replaceWith(data)
@@ -35,17 +43,16 @@ changeStateOfDispatchGroup = function (grId, changeAt) {
         url: "/api/lists/" + grId + "/state",
         data: JSON.stringify({"state": changeAt}),
         success: function (data) {
-            $("#dispatch_group_button_" + grId).addClass(changeAt === "enable" ? "u-border-green" : "u-border-red")
-            $("#dispatch_group_button_" + grId).removeClass(changeAt === "enable" ? "u-border-red" : "u-border-green")
             getGroupInfo(data.gr_id);
+            updateDispatchGroupButtons();
         },
         error: function () {
-            alert("Не удалось обновить название, попробуйте позже");
+            alert("Не удалось обновить, попробуйте позже");
         }
     });
 };
 
-function changeUserState(id) {
+changeUserState = function (id) {
     $.ajax({
         type: "POST",
         url: "/api/users/state/change",
@@ -57,4 +64,20 @@ function changeUserState(id) {
         dataType: "json"
     });
 };
+
+changeSettings = function (key) {
+    let newValue = prompt("Укажите новое значение для свойства: " + key, $('#settings-' + key).html())
+    if (newValue) {
+        $.ajax({
+            type: "POST",
+            url: "/api/settings/change",
+            data: JSON.stringify({"key": key, "value": newValue}),
+            success: function (data) {
+                $('#settings-' + data["key"]).html(data["value"]);
+            },
+            contentType: "application/json; charset=utf-8",
+            dataType: "json"
+        });
+    }
+}
 

@@ -6,7 +6,7 @@
     <meta name="keywords" content="INTUITIVE">
     <meta name="description" content="">
     <meta name="page_type" content="np-template-header-footer-from-plugin">
-    <title>dispatch_lists</title>
+    <title>Disp: Списки</title>
     <link rel="stylesheet" href="nicepage.css" media="screen">
     <link rel="stylesheet" href="nicepage-custom.css" media="screen">
     <link rel="stylesheet" href="dispatch_lists.css" media="screen">
@@ -52,14 +52,19 @@
                 </a>
             </div>
             <div class="u-custom-menu u-nav-container">
-                <ul class="u-nav u-unstyled u-nav-1">
+                <ul class="u-nav u-spacing-2 u-unstyled u-nav-1">
                     <li class="u-nav-item"><a
-                            class="u-button-style u-nav-link u-text-active-palette-1-base u-text-hover-palette-2-base"
-                            href="users.html" style="padding: 10px 20px;">Пользователи</a>
+                            class="u-active-palette-1-base u-border-active-palette-1-base u-border-hover-palette-1-base u-button-style u-hover-palette-1-light-1 u-nav-link u-text-active-white u-text-grey-90 u-text-hover-white"
+                            href="users.html" data-page-id="186720" style="padding: 10px 20px;">Пользователи</a>
                     </li>
                     <li class="u-nav-item"><a
-                            class="u-button-style u-nav-link u-text-active-palette-1-base u-text-hover-palette-2-base"
-                            href="dispatch_lists.html" style="padding: 10px 20px;">Редактирование списков</a>
+                            class="u-active-palette-1-base u-border-active-palette-1-base u-border-hover-palette-1-base u-button-style u-hover-palette-1-light-1 u-nav-link u-text-active-white u-text-grey-90 u-text-hover-white"
+                            href="dispatch_lists.html" data-page-id="186721" style="padding: 10px 20px;">Редактирование
+                        списков</a>
+                    </li>
+                    <li class="u-nav-item"><a
+                            class="u-active-palette-1-base u-border-active-palette-1-base u-border-hover-palette-1-base u-button-style u-hover-palette-1-light-1 u-nav-link u-text-active-white u-text-grey-90 u-text-hover-white"
+                            href="settings.html" data-page-id="208273" style="padding: 10px 20px;">Настройки</a>
                     </li>
                 </ul>
             </div>
@@ -73,6 +78,9 @@
                             </li>
                             <li class="u-nav-item"><a class="u-button-style u-nav-link" href="dispatch_lists.html"
                                                       style="padding: 10px 20px;">Редактирование списков</a>
+                            </li>
+                            <li class="u-nav-item"><a class="u-button-style u-nav-link" href="settings.html"
+                                                      style="padding: 10px 20px;">Настройки</a>
                             </li>
                         </ul>
                     </div>
@@ -119,7 +127,7 @@
                             <div class="u-layout">
                                 <div class="u-layout-row">
                                     <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-1">
-                                        <div class="u-container-layout u-container-layout-2">
+                                        <div class="u-container-layout u-container-layout-2" id="dispatch-group-buttons">
                                             %for info in dispatchGroupNames:
                                             <a style="width: 100%" href="#" id="dispatch_group_button_{{info.id}}"
                                                onclick="getGroupInfo('{{info.id}}')"
