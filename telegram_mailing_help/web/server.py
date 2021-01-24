@@ -58,6 +58,32 @@ def settings():
     return template(_getTemplateFile("settings.tpl"), settings=db.getAllStorages())
 
 
+@get("/pages/reports.html")
+def settings():
+    top_today = preparation.prepareReport(
+        "SELECT u.name, count(dla.dispatch_list_id) as assignedCount from DISPATCH_LIST_ASSIGNS dla "
+        "left join USERS u on (u.id = dla.users_id ) "
+        "where dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dla.users_id ORDER BY assignedCount DESC",
+        ["Имя", "Кол-во взятых блоков"])
+    top_month = preparation.prepareReport(
+        "SELECT u.name, count(dla.dispatch_list_id) as assignedCount from DISPATCH_LIST_ASSIGNS dla "
+        "left join USERS u on (u.id = dla.users_id ) "
+        "where dla.state='assigned' AND "
+        "strftime('%Y',dla.change_date) = strftime('%Y',date('now')) AND  strftime('%m',dla.change_date) = strftime('%m',date('now'))"
+        " GROUP BY dla.users_id ORDER BY assignedCount DESC",
+        ["Имя", "Кол-во взятых блоков"]
+    )
+    top_lists_today = preparation.prepareReport(
+        "SELECT dlg.dispatch_group_name, count(dla.uuid) as assignedCount FROM DISPATCH_LIST_ASSIGNS dla "
+        "LEFT JOIN DISPATCH_LIST dl ON (dl.id = dla.dispatch_list_id ) "
+        "LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dlg.id = dl.dispatch_group_id )"
+        " WHERE dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dlg.id",
+        ["Наименование кнопки", "Кол-во взятых блоков"]
+    )
+    return template(_getTemplateFile("reports.tpl"), top_today=top_today, top_month=top_month,
+                    top_lists_today=top_lists_today)
+
+
 @get("/pages/dispatch_lists.html")
 def users():
     return template(_getTemplateFile("dispatch_lists.tpl"), dispatchGroupNames=list(db.getAllDispatchGroupNames()))

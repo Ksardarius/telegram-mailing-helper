@@ -13,6 +13,7 @@ dacite = "^1.6.0"
 sqlite3worker = "^1.1.7"
 gevent = "^20.12.1"
 systemd = "^0.16.1"
+tabulate = "^0.8.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

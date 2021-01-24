@@ -14,6 +14,8 @@ import logging
 import threading
 from datetime import datetime
 
+from tabulate import tabulate
+
 from telegram_mailing_help.db.dao import Dao, DispatchListItem, User, DispatchListGroupItem
 from telegram_mailing_help.db.daoExp import OptimisticLockException
 
@@ -87,3 +89,9 @@ class Preparation:
             else:
                 return ("Свободных блоков для данного списка больше нет," \
                         " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка", None)
+
+    def prepareReport(self, sqlQuery: str, columns: list):
+        result = []
+        for s in self.dao.freeQuery(sqlQuery):
+            result.append(list(s))
+        return tabulate(result, headers=columns, tablefmt='grid')
