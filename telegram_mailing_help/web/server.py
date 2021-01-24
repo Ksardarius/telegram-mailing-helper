@@ -16,12 +16,15 @@ import pathlib
 import threading
 from functools import wraps
 
-from bottle import HTTPResponse, BaseRequest, Bottle, request, response, get, post, redirect, template, static_file, \
-    run as run_bottle
+from bottle import TEMPLATE_PATH, HTTPResponse, BaseRequest, Bottle, request, response, get, post, redirect, template, \
+    static_file, run as run_bottle
+
+TEMPLATE_PATH.append(str(pathlib.Path(__file__).parent.absolute()) + '/templates/')
 
 from telegram_mailing_help.telegram.bot import MailingBot
 
 BaseRequest.MEMFILE_MAX = 1024 * 1024 * 1024 * 10
+
 from telegram_mailing_help.appConfig import ApplicationConfiguration
 from telegram_mailing_help import __version__
 from telegram_mailing_help.db.dao import Dao, UserState

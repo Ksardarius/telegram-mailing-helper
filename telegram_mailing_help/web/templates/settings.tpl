@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html style="font-size: 16px;">
-  % include('web/templates/header.tpl', title='Disp: Настройки', custom_css='settings.css')
+  % include('header.tpl', title='Disp: Настройки', custom_css='settings.css')
     <section class="u-align-center u-clearfix u-section-1" id="sec-2267">
       <div class="u-clearfix u-sheet u-valign-top u-sheet-1">
         <div class="u-expanded-width u-table u-table-responsive u-table-1">
@@ -30,4 +30,4 @@
         </div>
       </div>
     </section>
-  % include('web/templates/footer.tpl')
+  % include('footer.tpl')

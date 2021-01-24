@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html style="font-size: 16px;">
-% include('web/templates/header.tpl', title='Disp: Списки', custom_css='dispatch_lists.css')
+% include('header.tpl', title='Disp: Списки', custom_css='dispatch_lists.css')
 <section class="u-align-left u-clearfix u-section-1" id="sec-dedf">
     <div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
         <div class="u-expanded-width u-tab-links-align-left u-tabs u-tabs-1">
@@ -130,4 +130,4 @@
         </div>
     </div>
 </section>
-% include('web/templates/footer.tpl')
+% include('footer.tpl')
