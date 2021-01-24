@@ -80,7 +80,7 @@ def settings():
         "SELECT dlg.dispatch_group_name, count(dla.uuid) as assignedCount FROM DISPATCH_LIST_ASSIGNS dla "
         "LEFT JOIN DISPATCH_LIST dl ON (dl.id = dla.dispatch_list_id ) "
         "LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dlg.id = dl.dispatch_group_id )"
-        " WHERE dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dlg.id",
+        " WHERE dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dlg.id  ORDER BY assignedCount DESC",
         ["Наименование кнопки", "Кол-во взятых блоков"]
     )
     return template(_getTemplateFile("reports.tpl"), top_today=top_today, top_month=top_month,
