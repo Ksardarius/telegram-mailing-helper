@@ -68,6 +68,11 @@ def settings():
         "left join USERS u on (u.id = dla.users_id ) "
         "where dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dla.users_id ORDER BY assignedCount DESC",
         ["Имя", "Кол-во взятых блоков"])
+    top_yesterday = preparation.prepareReport(
+        "SELECT u.name, count(dla.dispatch_list_id) as assignedCount from DISPATCH_LIST_ASSIGNS dla "
+        "left join USERS u on (u.id = dla.users_id ) "
+        "where dla.state='assigned' AND DATE(dla.change_date)=DATE('now','-1 day') GROUP BY dla.users_id ORDER BY assignedCount DESC",
+        ["Имя", "Кол-во взятых блоков"])
     top_month = preparation.prepareReport(
         "SELECT u.name, count(dla.dispatch_list_id) as assignedCount from DISPATCH_LIST_ASSIGNS dla "
         "left join USERS u on (u.id = dla.users_id ) "
@@ -83,8 +88,20 @@ def settings():
         " WHERE dla.state='assigned' AND DATE(dla.change_date)=DATE('now') GROUP BY dlg.id  ORDER BY assignedCount DESC",
         ["Наименование кнопки", "Кол-во взятых блоков"]
     )
-    return template(_getTemplateFile("reports.tpl"), top_today=top_today, top_month=top_month,
-                    top_lists_today=top_lists_today)
+    top_lists_yesterday = preparation.prepareReport(
+        "SELECT dlg.dispatch_group_name, count(dla.uuid) as assignedCount FROM DISPATCH_LIST_ASSIGNS dla "
+        "LEFT JOIN DISPATCH_LIST dl ON (dl.id = dla.dispatch_list_id ) "
+        "LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dlg.id = dl.dispatch_group_id )"
+        " WHERE dla.state='assigned' AND DATE(dla.change_date)=DATE('now','-1 day') GROUP BY dlg.id  ORDER BY assignedCount DESC",
+        ["Наименование кнопки", "Кол-во взятых блоков"]
+    )
+    return template(_getTemplateFile("reports.tpl"),
+                    top_today=top_today,
+                    top_yesterday=top_yesterday,
+                    top_month=top_month,
+                    top_lists_today=top_lists_today,
+                    top_lists_yesterday=top_lists_yesterday,
+                    )
 
 
 @get("/pages/dispatch_lists.html")
