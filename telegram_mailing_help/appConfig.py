@@ -22,6 +22,7 @@ import telegram_mailing_help.web.config as configServer
 
 _config = None
 
+
 @dataclass
 class ApplicationConfiguration:
     rootConfigDir: str
@@ -29,6 +30,7 @@ class ApplicationConfiguration:
     logFileName: str
     db: configDb.Configuration
     server: configServer.Configuration = configServer.Configuration()
+    logOnlyInFile: bool = False
 
 
 def prepareConfig():

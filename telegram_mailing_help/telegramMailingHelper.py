@@ -31,7 +31,7 @@ log = getLogger()
 class TelegramMailingHelper:
 
     def signal_handler(self, signum, frame) -> None:
-
+        print("Try to stop helper...")
         while True:
             try:
                 self.telegramBot.stop()
@@ -42,6 +42,7 @@ class TelegramMailingHelper:
             sleep(1)
         log.info("Application stopped")
         systemd.daemon.notify(systemd.daemon.Notification.STOPPING)
+        print("Helper had been stopped")
         sys.exit()
 
     def __init__(self, appConfig: ApplicationConfiguration):

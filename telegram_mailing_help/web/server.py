@@ -206,7 +206,8 @@ class BottleServer(threading.Thread):
         def _logToLogger(*args, **kwargs):
             try:
                 actual_response = fn(*args, **kwargs)
-                log.info('%s %s %s %s',
+                log.info('%s: %s %s %s %s',
+                         request.get_header("Ssl-Dn", "non-ssl"),
                          request.remote_addr,
                          request.method,
                          request.url,
@@ -230,7 +231,6 @@ class BottleServer(threading.Thread):
         return _logToLogger
 
     def run(self) -> None:
-        server = Bottle()
         run_bottle(host=self.config.server.host,
                    port=self.config.server.port,
                    server=self.config.server.engine,

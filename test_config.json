@@ -6,5 +6,6 @@
   },
   "rootConfigDir": "../data/",
   "telegramToken": "inputTelTokenHere",
-  "logFileName": "/tmp/tel_mai_helper_test.log"
+  "logFileName": "/tmp/tel_mai_helper_test.log",
+  "logOnlyInFile": false
 }
