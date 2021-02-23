@@ -144,30 +144,30 @@ def test_repeat_block_assigns():
         for dispatchList in dispatchLists:
             dao.saveDispatchList(dispatchList)
 
-    text1, did1 = preparation.getAndAssignDispatchList(users[0], groups[0].id)
-    text2, did2 = preparation.getAndAssignDispatchList(users[1], groups[0].id)
+    text1, did1, assingedAmount1 = preparation.getAndAssignDispatchList(users[0], groups[0].id)
+    text2, did2, assingedAmount2 = preparation.getAndAssignDispatchList(users[1], groups[0].id)
     assert text1 != text2, "should return different items for different users too"
     assert did1 != did2, "should return different items for different users too"
-    text1, did1 = preparation.getAndAssignDispatchList(users[0], groups[1].id)
-    text2, did2 = preparation.getAndAssignDispatchList(users[1], groups[1].id)
-    text3, did3 = preparation.getAndAssignDispatchList(users[2], groups[1].id)
+    text1, did1, assingedAmount1 = preparation.getAndAssignDispatchList(users[0], groups[1].id)
+    text2, did2, assingedAmount2 = preparation.getAndAssignDispatchList(users[1], groups[1].id)
+    text3, did3, assingedAmount3 = preparation.getAndAssignDispatchList(users[2], groups[1].id)
     assert text1 == text2, "should return the same items for different users too because repeat is 2"
     assert did1 == did2, "should return the same items for different users too because repeat is 2"
     assert text2 != text3, "should return different items because the amount of repeat had filled"
-    text1, did1 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
-    text2, did2 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
-    text3, did3 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
-    text4, did4 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
-    text5, did5 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
-    text6, did6 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text1, did1, assingedAmount1 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text2, did2, assingedAmount2 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text3, did3, assingedAmount3 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text4, did4, assingedAmount4 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text5, did5, assingedAmount5 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text6, did6, assingedAmount6 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
     assert text1 != text2, "should return different items because for one user must be different blocks"
     assert len(text6) > 10, "should be message about not-available blocks"
-    text7, did7 = preparation.getAndAssignDispatchList(users[1], groups[2].id)
+    text7, did7, assingedAmount7 = preparation.getAndAssignDispatchList(users[1], groups[2].id)
     assert len(text7) < 10, "for another user should be free blocks because repeat=3"
-    text8, did8 = preparation.getAndAssignDispatchList(users[2], groups[2].id)
+    text8, did8, assingedAmount8 = preparation.getAndAssignDispatchList(users[2], groups[2].id)
     assert text7 == text8, "messages for diff user with repeat=3"
     preparation.unassignDispatchListFromUser(users[0], did5)
-    text9, did9 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
+    text9, did9, assingedAmount9 = preparation.getAndAssignDispatchList(users[0], groups[2].id)
     assert text9 == text5, "block was returned, and now busied back"
     assert did9 == did5, "block was returned, and now busied back"
 
@@ -178,7 +178,7 @@ def test_repeat_block_assigns():
             textData.append(preparation.getAndAssignDispatchList(users[u], groups[3].id))
     preparation.unassignDispatchListFromUser(users[0], textData[0][1])
     preparation.unassignDispatchListFromUser(users[1], textData[3][1])
-    text10, did10 = preparation.getAndAssignDispatchList(users[0], groups[3].id)
-    text11, did11 = preparation.getAndAssignDispatchList(users[1], groups[3].id)
+    text10, did10, assingedAmount10 = preparation.getAndAssignDispatchList(users[0], groups[3].id)
+    text11, did11, assingedAmount11 = preparation.getAndAssignDispatchList(users[1], groups[3].id)
     assert text10 == textData[0][0]
     assert text11 == textData[3][0]

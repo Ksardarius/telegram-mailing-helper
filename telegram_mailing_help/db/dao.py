@@ -158,9 +158,9 @@ class Dao:
             "LIMIT 1",
             values=(AssignState.ASSIGNED.value, dispatch_group_id, user.id, AssignState.ASSIGNED.value))
         if len(result) != 1:
-            return None, False
+            return None, False, 0
         else:
-            return DispatchListItem(*result[0][0:7]), result[0][8] - result[0][7] <= 1
+            return DispatchListItem(*result[0][0:7]), result[0][8] - result[0][7] <= 1, result[0][7]
         endif
 
     def assignBlockIntoUser(self, user: User, dispatch_list: DispatchListItem, setIs_assigned: bool):

@@ -76,7 +76,7 @@ class Preparation:
             item = None
             while attempt < 5:
                 try:
-                    item, setIs_assigned = self.dao.getFreeDispatchListItem(dispatch_group_id, user)
+                    item, setIs_assigned, already_assigned_amount = self.dao.getFreeDispatchListItem(dispatch_group_id, user)
                     if item:
                         self.dao.assignBlockIntoUser(user, item, setIs_assigned)
                     break
@@ -86,10 +86,10 @@ class Preparation:
                 attempt += 1
 
             if item:
-                return (item.links_values_butch, item.id)
+                return (item.links_values_butch, item.id, already_assigned_amount)
             else:
                 return ("Свободных блоков для данного списка больше нет," \
-                        " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка", None)
+                        " пожалуйста обратитесь к куратору для их добавления или для скрытия данного списка", None, None)
 
     def prepareReport(self, sqlQuery: str, columns: list):
         result = []

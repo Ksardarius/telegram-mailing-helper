@@ -131,9 +131,14 @@ class MailingBot:
 
             if dispatchListGroup.enabled:
 
-                text, dispatchListId = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
+                text, dispatchListId, already_assigned_amount = self.preparation.getAndAssignDispatchList(user,
+                                                                                                          dispatchListGroup.id)
+                repeatListInfo = ""
+                if dispatchListGroup.repeat > 1 and already_assigned_amount is not None:
+                    repeatListInfo = " (повторная выдача: %s)" % (already_assigned_amount + 1)
                 context.bot.send_message(chat_id=update.effective_chat.id,
-                                         text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
+                                         text="<b style='text-align: center;'>%s%s:</b>"
+                                              % (dispatchListGroup.dispatch_group_name, repeatListInfo),
                                          parse_mode=ParseMode.HTML)
                 notifTelegramId = self.db.getValueFromStorage("send_notification_only_5_blocks_left_to_telegram_id");
                 if (notifTelegramId):
