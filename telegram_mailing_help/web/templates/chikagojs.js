@@ -16,7 +16,7 @@ removeButton = function (gr_id) {
             url: "/api/lists/" + gr_id + "/change",
             data: JSON.stringify({"hidden": true}),
             success: function (data) {
-                getGroupInfo(gr_id);
+                $("#dispatch-group-info").replaceWith("<div id=\"dispatch-group-info\">Кнопка была успешно удалена</div>")
                 updateDispatchGroupButtons();
             },
             error: function () {
