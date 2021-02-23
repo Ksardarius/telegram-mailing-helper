@@ -8,6 +8,24 @@ updateDispatchGroupButtons = function () {
         }
     });
 }
+
+removeButton = function (gr_id) {
+    if (confirm('Вы уверены что хотите удалить кнопку?')) {
+        $.ajax({
+            type: "POST",
+            url: "/api/lists/" + gr_id + "/change",
+            data: JSON.stringify({"hidden": true}),
+            success: function (data) {
+                getGroupInfo(gr_id);
+                updateDispatchGroupButtons();
+            },
+            error: function () {
+                alert("Не удалось удалить кнопку, попробуйте позже");
+            }
+        });
+    }
+}
+
 editObject = function (field, current, gr_id) {
     let newName = prompt("Укажите новое значение для поля", current)
     if (newName) {

@@ -69,6 +69,7 @@ class DispatchListGroupItem:
     enabled: bool = True
     priority: int = 100
     repeat: int = 1
+    hidden: bool = False
 
 
 @dataclass
@@ -283,7 +284,7 @@ class Dao:
 
     def getAllDispatchGroupNames(self):
         result = self.worker.execute(
-            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP ORDER BY priority, dispatch_group_name;")
+            "SELECT id, dispatch_group_name, description, enabled FROM DISPATCH_LIST_GROUP WHERE hidden = 0 ORDER BY priority, dispatch_group_name;")
         if len(result) == 0:
             return []
         else:

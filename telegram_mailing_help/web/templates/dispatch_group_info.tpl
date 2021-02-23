@@ -9,4 +9,7 @@
         <li>Кол-во свободных блоков: {{data["info"].free_count}}</li>
     </ul>
     <a href="#a" onclick="changeStateOfDispatchGroup('{{data["info"].id}}','{{data["state"]["value"]}}')">{{data["state"]["text"]}}</a>
+    % if not data["info"].enabled:
+    <p/><a href="#a" style="color:red" onclick="removeButton({{data['info'].id}})">УДАЛИТЬ КНОПКУ</a>
+    % end
 </div>
