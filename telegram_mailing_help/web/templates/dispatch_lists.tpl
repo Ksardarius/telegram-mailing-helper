@@ -106,6 +106,19 @@
                                                required="required"/>
                                     </div>
                                 </div>
+                                <div class="u-form-group u-form-select u-form-group-4">
+                                    <label for="select-1ff5" class="u-label">Выдавать каждый блок следующее число раз (только для новых кнопок, менять после создания невозможно!):</label>
+                                    <div class="u-form-select-wrapper">
+                                        <datalist id="repeatTimesVariants">
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>4</option>
+                                        </datalist>
+                                        <input type="text" id="select-1ff6" name="repeatTimes" list="repeatTimesVariants"
+                                               class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-radius-5 u-white"
+                                               required="required"/>
+                                    </div>
+                                </div>
                                 <div class="u-form-checkbox u-form-group u-form-group-5">
                                     <input type="checkbox" id="checkbox-0931" name="disableByDefault" value="Off">
                                     <label for="checkbox-0931" class="u-label">Скрыть кнопку (только для новых кнопок, для сущесвующих останется как есть!)</label>

@@ -3,6 +3,7 @@
         <li>Название: {{data["info"].dispatch_group_name}} -> <a href="#a" onclick="editObject('dispatch_group_name','{{data["info"].dispatch_group_name}}', {{data["info"].id}})">Редактировать</a></li>
         <li>Описание: {{data["info"].description}} -> <a href="#a" onclick="editObject('description','{{data["info"].description}}', {{data["info"].id}})">Редактировать</a></li>
         <li>Приоритет (целое число): {{data["info"].priority}} -> <a href="#a" onclick="editObject('priority','{{data["info"].priority}}', {{data["info"].id}})">Редактировать</a></li>
+        <li>Повторно отдавать блок раз (целое число): {{data["info"].repeat}}</li>
         <li>Количество блоков: {{data["info"].count}}</li>
         <li>Кол-во назначенных блоков: {{data["info"].assigned_count}}</li>
         <li>Кол-во свободных блоков: {{data["info"].free_count}}</li>

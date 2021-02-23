@@ -15,9 +15,6 @@ from datetime import datetime
 
 from yoyo import step
 
-from telegram_mailing_help import appConfig
-from telegram_mailing_help.db import utils
-
 steps = [
     step("ALTER TABLE STORAGE ADD COLUMN description TEXT;"),
     step("UPDATE STORAGE SET description='Префикс сайта где находится админка (https://site.com/)' WHERE key='admin_url'"),

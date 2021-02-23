@@ -115,51 +115,52 @@ class MailingBot:
 
     def _checkCountOfLeftBlocksAndSendNotification(self, dao: Dao, notifTelegramId, dispatchListGroupId):
         groupInfo = dao.getDispatchGroupInfo(dispatchListGroupId)
-        if groupInfo.free_count == 5:
+        countOfFreeBlocksTrigger = int(dao.getValueFromStorage("count_of_free_blocks_before_notification"))
+        if groupInfo.free_count == countOfFreeBlocksTrigger:
             self.sendFreeMessageToRegisteredUser(
                 notifTelegramId,
-                "\U000026A0 У списка %s осталось 5 свободных блоков, может быть пора добавить новые, добавить можно в админке: %s/pages/dispatch_lists.html" %
-                (groupInfo.dispatch_group_name, dao.getValueFromStorage("admin_url")))
+                "\U000026A0 У списка %s осталось %s свободных блоков, может быть пора добавить новые, добавить можно в админке: %s/pages/dispatch_lists.html" %
+                (groupInfo.dispatch_group_name, countOfFreeBlocksTrigger, dao.getValueFromStorage("admin_url")))
 
     def getLinksFrom(self, update: Update, context):
         message = update.message or update.callback_query.message
         user = self.db.getUserByTelegramId(str(message.chat.id))
         if UserState(user.state) == UserState.CONFIRMED:
-            dispatchListGroupId = update.callback_query.data[len("get_links_from: "):]
-            # !!! for backward compability, SHOULD BE REMOVED!!!!
-            try:
-                dispatchListGroupId = int(dispatchListGroupId)
-                dispatchListGroup = self.db.getDispatchListGroupById(dispatchListGroupId)
-            except Exception as e:
-                log.warning(
-                    "Can't cast dispatchListGroupId: %s into integer, maybe used old button's callback,"
-                    " try find by group name", dispatchListGroupId)
-                log.exception(e)
-                dispatchListGroup = self.db.getDispatchListGroupByName(dispatchListGroupId)
+            dispatchListGroupId = int(update.callback_query.data[len("get_links_from: "):])
+            dispatchListGroup = self.db.getDispatchListGroupById(dispatchListGroupId)
 
-            text, dispatchListId = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
-            context.bot.send_message(chat_id=update.effective_chat.id,
-                                     text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
-                                     parse_mode=ParseMode.HTML)
-            notifTelegramId = self.db.getValueFromStorage("send_notification_only_5_blocks_left_to_telegram_id");
-            if (notifTelegramId):
-                threading.Thread(target=self._checkCountOfLeftBlocksAndSendNotification,
-                                 args=(self.db, notifTelegramId, dispatchListGroup.id)).start()
-            secondLineOfKeybord = []
-            if dispatchListId:
-                secondLineOfKeybord.append(InlineKeyboardButton(
-                    text="\U000021A9 Вернуть",
-                    callback_data="confirm_unassign_link_for: %s" % dispatchListId))
-            secondLineOfKeybord.append(InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
-                                                            callback_data="get_dispatch_group_names"))
-            update.callback_query.message.reply_text(text,
-                                                     reply_markup=InlineKeyboardMarkup(
-                                                         [
-                                                             [InlineKeyboardButton(
-                                                                 text="\U000027A1 %s: след. блок" % dispatchListGroup.dispatch_group_name,
-                                                                 callback_data="get_links_from: %s" % dispatchListGroup.id)],
-                                                             secondLineOfKeybord
-                                                         ]))
+            if dispatchListGroup.enabled:
+
+                text, dispatchListId = self.preparation.getAndAssignDispatchList(user, dispatchListGroup.id)
+                context.bot.send_message(chat_id=update.effective_chat.id,
+                                         text="<b style='text-align: center;'>%s:</b>" % dispatchListGroup.dispatch_group_name,
+                                         parse_mode=ParseMode.HTML)
+                notifTelegramId = self.db.getValueFromStorage("send_notification_only_5_blocks_left_to_telegram_id");
+                if (notifTelegramId):
+                    threading.Thread(target=self._checkCountOfLeftBlocksAndSendNotification,
+                                     args=(self.db, notifTelegramId, dispatchListGroup.id)).start()
+                secondLineOfKeybord = []
+                if dispatchListId:
+                    secondLineOfKeybord.append(InlineKeyboardButton(
+                        text="\U000021A9 Вернуть",
+                        callback_data="confirm_unassign_link_for: %s" % dispatchListId))
+                secondLineOfKeybord.append(InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
+                                                                callback_data="get_dispatch_group_names"))
+                update.callback_query.message.reply_text(text,
+                                                         reply_markup=InlineKeyboardMarkup(
+                                                             [
+                                                                 [InlineKeyboardButton(
+                                                                     text="\U000027A1 %s: след. блок" % dispatchListGroup.dispatch_group_name,
+                                                                     callback_data="get_links_from: %s" % dispatchListGroup.id)],
+                                                                 secondLineOfKeybord
+                                                             ]))
+            else:
+                update.callback_query.message.reply_text(
+                    "Выбранный список более недоступен",
+                    reply_markup=InlineKeyboardMarkup(
+                        [[InlineKeyboardButton(text="\U0001F4C3 Выбрать другой список",
+                                               callback_data="get_dispatch_group_names")]]
+                    ))
             update.callback_query.answer()
         else:
             message.reply_text("Получить данные не удалось, попробуйте позже или еще раз")

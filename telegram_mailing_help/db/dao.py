@@ -68,6 +68,7 @@ class DispatchListGroupItem:
     description: str
     enabled: bool = True
     priority: int = 100
+    repeat: int = 1
 
 
 @dataclass
@@ -80,6 +81,7 @@ class DispatchGroupInfo:
     free_count: int
     enabled: bool
     priority: int = 100
+    repeat: int = 1
 
 
 @dataclass
@@ -145,32 +147,39 @@ class Dao:
                     raise OptimisticLockException()
         return item
 
-    def getFreeDispatchListItem(self, dispatch_group_id):
+    def getFreeDispatchListItem(self, dispatch_group_id, user: User):
         result = self.worker.execute(
-            "SELECT * from DISPATCH_LIST WHERE dispatch_group_id=? AND is_assigned=0 LIMIT 1",
-            values=(dispatch_group_id,))
+            "SELECT dl.*, SUM(CASE dla.state when ? then 1 else 0 end) AS r_count, dlg.repeat AS repeat "
+            "FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_ASSIGNS dla ON (dla.dispatch_list_id=dl.id) "
+            "LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dlg.id=dl.dispatch_group_id ) "
+            "WHERE dl.dispatch_group_id=? AND dl.is_assigned=0 "
+            "GROUP BY dl.id HAVING r_count<dlg.repeat AND "
+            "(r_count=0 OR ? NOT IN (SELECT users_id FROM DISPATCH_LIST_ASSIGNS WHERE state=? AND dispatch_list_id=dl.id)) "
+            "LIMIT 1",
+            values=(AssignState.ASSIGNED.value, dispatch_group_id, user.id, AssignState.ASSIGNED.value))
         if len(result) != 1:
-            return None
+            return None, False
         else:
-            return DispatchListItem(*result[0])
+            return DispatchListItem(*result[0][0:7]), result[0][8] - result[0][7] <= 1
+        endif
 
-    def assignBlockIntoUser(self, user: User, dispatch_list: DispatchListItem):
-        self.worker.execute("UPDATE DISPATCH_LIST set is_assigned=1, _version=? WHERE id=? and _version=?",
-                            values=(dispatch_list._version + 1, dispatch_list.id, dispatch_list._version))
+    def assignBlockIntoUser(self, user: User, dispatch_list: DispatchListItem, setIs_assigned: bool):
+        self.worker.execute("UPDATE DISPATCH_LIST set is_assigned=?, _version=? WHERE id=? and _version=?",
+                            values=(1 if setIs_assigned else 0, dispatch_list._version + 1, dispatch_list.id,
+                                    dispatch_list._version))
         assignId = str(uuid.uuid4())
         self.worker.execute(
             "INSERT INTO DISPATCH_LIST_ASSIGNS (uuid,dispatch_list_id,users_id,state,change_date) values (?,?,?,?,?)",
             values=(assignId, dispatch_list.id, user.id, AssignState.ASSIGNED.value, datetime.now().isoformat()))
-        if self.worker.execute(
-                "SELECT COUNT(dl.id) FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_ASSIGNS dla ON (dla.dispatch_list_id=dl.id ) "
-                "WHERE dl.id =? AND dl._version=? AND dla.users_id =? AND dl.is_assigned=1 AND dla.state=?",
-                values=(dispatch_list.id, dispatch_list._version + 1, user.id, AssignState.ASSIGNED.value))[0][0] != 1:
-            self.worker.execute("DELETE FROM DISPATCH_LIST_ASSIGNS WHERE uuid=?",
-                                values=(assignId,))
-            raise OptimisticLockException()
-        else:
-            dispatch_list._version = dispatch_list._version + 1
-            dispatch_list.is_assigned = True
+        # if self.worker.execute(
+        #         "SELECT COUNT(dl.id) FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_ASSIGNS dla ON (dla.dispatch_list_id=dl.id ) "
+        #         "WHERE dl.id =? AND dl._version=? AND dla.users_id =? AND dl.is_assigned=1 AND dla.state=?",
+        #         values=(dispatch_list.id, dispatch_list._version + 1, user.id, AssignState.ASSIGNED.value))[0][0] != 1:
+        #     self.worker.execute("DELETE FROM DISPATCH_LIST_ASSIGNS WHERE uuid=?", values=(assignId,))
+        #     raise OptimisticLockException()
+        # else:
+        dispatch_list._version = dispatch_list._version + 1
+        dispatch_list.is_assigned = True
 
     def freeAssignedBlockFromUser(self, user: User, dispatch_list: DispatchListItem):
         assignRecord = \
@@ -310,7 +319,7 @@ class Dao:
 
     def getDispatchGroupInfo(self, dispatch_group_id):
         result = self.worker.execute(
-            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description,dlg.priority FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
+            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description,dlg.priority,dlg.repeat FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
             values=(dispatch_group_id,))
         if len(result) == 0:
             return None
@@ -324,5 +333,6 @@ class Dao:
                 free_count=row[2] - row[3],
                 enabled=bool(row[4]),
                 description=row[5],
-                priority=row[6]
+                priority=row[6],
+                repeat=row[7]
             )

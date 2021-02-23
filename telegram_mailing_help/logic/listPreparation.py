@@ -35,7 +35,7 @@ class Preparation:
             yield lst[i:i + n]
 
     def addDispatchList(self, dispatch_group_name: str, description: str, links: list, devideBy: int,
-                        disableByDefault: bool, dispatch_group_id: int = None):
+                        disableByDefault: bool, dispatch_group_id: int = None, repeatTimes: int = 1, ):
         dispatchListGroup = self.dao.getDispatchListGroupById(dispatch_group_id) if dispatch_group_id \
             else self.dao.getDispatchListGroupByName(dispatch_group_name)
         if not dispatchListGroup:
@@ -44,7 +44,8 @@ class Preparation:
                 dispatch_group_name=dispatch_group_name,
                 social_network=None,
                 description=description,
-                enabled=not disableByDefault
+                enabled=not disableByDefault,
+                repeat=repeatTimes
             )
             dispatchListGroup = self.dao.saveDispatchListGroup(dispatchListGroup)
         countOfAdded = 0
@@ -65,7 +66,7 @@ class Preparation:
     def unassignDispatchListFromUser(self, user: User, dispatch_list_id: int):
         with self._assignLock:
             dispatchList = self.dao.getDispatchListById(dispatch_list_id)
-            if dispatchList and dispatchList.is_assigned:
+            if dispatchList:
                 dispatchList = self.dao.freeAssignedBlockFromUser(user, dispatchList)
         return dispatchList
 
@@ -75,9 +76,9 @@ class Preparation:
             item = None
             while attempt < 5:
                 try:
-                    item = self.dao.getFreeDispatchListItem(dispatch_group_id)
+                    item, setIs_assigned = self.dao.getFreeDispatchListItem(dispatch_group_id, user)
                     if item:
-                        self.dao.assignBlockIntoUser(user, item)
+                        self.dao.assignBlockIntoUser(user, item, setIs_assigned)
                     break
                 except OptimisticLockException:
                     log.warning("Can't assign dispatchList with id: %s optimistic lock, attempt: %s", item.id, attempt)

@@ -222,7 +222,7 @@ def test_assign_and_free_block():
         created=datetime.now().isoformat()
     ))
     assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 1
-    dao.assignBlockIntoUser(user, dispatchList)
+    dao.assignBlockIntoUser(user, dispatchList, True)
     assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 0
     dao.freeAssignedBlockFromUser(user, dispatchList)
     assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 1
@@ -234,7 +234,7 @@ def test_assign_and_free_block():
         created=datetime.now().isoformat()
     ))
     dispatchList = dao.getDispatchListById(dispatchList.id)
-    dao.assignBlockIntoUser(user2, dispatchList)
+    dao.assignBlockIntoUser(user2, dispatchList, True)
     assert dao.getDispatchGroupInfo(dispatchGroup.id).free_count == 0
     assignsForTestedDispatchList = dao.freeQuery(
         "Select * from dispatch_list_assigns where dispatch_list_id=%s" % dispatchList.id)

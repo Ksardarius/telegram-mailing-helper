@@ -16,7 +16,7 @@ import pathlib
 import threading
 from functools import wraps
 
-from bottle import TEMPLATE_PATH, HTTPResponse, BaseRequest, Bottle, request, response, get, post, redirect, template, \
+from bottle import TEMPLATE_PATH, HTTPResponse, BaseRequest, request, response, get, post, redirect, template, \
     static_file, run as run_bottle
 
 TEMPLATE_PATH.append(str(pathlib.Path(__file__).parent.absolute()) + '/templates/')
@@ -120,9 +120,10 @@ def addDispatchList():
     description = request.forms.description
     links = request.forms.list.splitlines()
     groupSize = int(request.forms.groupSize)
+    repeatTimes = int(request.forms.repeatTimes)
     disableByDefault = bool(request.forms.disableByDefault)
     countOfAddedDispatchList = preparation.addDispatchList(dispatchGroupName, description, links, groupSize,
-                                                           disableByDefault)
+                                                           disableByDefault, repeatTimes=repeatTimes)
     return {"success": True, "countOfAddedItems": countOfAddedDispatchList}
 
 
