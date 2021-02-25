@@ -235,7 +235,7 @@ class Dao:
         return rez
 
     def getDispatchListGroupByName(self, dispatch_group_name: str):
-        result = self.worker.execute("SELECT * from DISPATCH_LIST_GROUP where dispatch_group_name=? LIMIT 1",
+        result = self.worker.execute("SELECT * from DISPATCH_LIST_GROUP where dispatch_group_name=? AND hidden=0 LIMIT 1",
                                      values=(dispatch_group_name,))
         if len(result) != 1:
             rez = None
