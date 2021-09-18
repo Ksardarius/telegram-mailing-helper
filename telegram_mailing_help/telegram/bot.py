@@ -140,6 +140,10 @@ class MailingBot:
                                          text="<b style='text-align: center;'>%s%s:</b>"
                                               % (dispatchListGroup.dispatch_group_name, repeatListInfo),
                                          parse_mode=ParseMode.HTML)
+                if (dispatchListGroup.show_comment_with_block):
+                    context.bot.send_message(chat_id=update.effective_chat.id,
+                                             text=" <b style='text-align: center;'>Описание</b>: %s" % dispatchListGroup.description,
+                                             parse_mode=ParseMode.HTML)
                 notifTelegramId = self.db.getValueFromStorage("send_notification_only_5_blocks_left_to_telegram_id");
                 if (notifTelegramId):
                     threading.Thread(target=self._checkCountOfLeftBlocksAndSendNotification,

@@ -10,6 +10,7 @@
 #
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
+import base64
 import json
 import logging
 import pathlib
@@ -109,6 +110,11 @@ def users():
     return template(_getTemplateFile("dispatch_lists.tpl"), dispatchGroupNames=list(db.getAllDispatchGroupNames()))
 
 
+@get("/favicon.ico")
+def favicon():
+    return static_file("images/favicon.png", root=_getTemplateFile(""))
+
+
 @get("/pages/<page>")
 def pages(page):
     return static_file(page, root=_getTemplateFile(""))
@@ -122,9 +128,13 @@ def addDispatchList():
     groupSize = int(request.forms.groupSize)
     repeatTimes = int(request.forms.repeatTimes)
     disableByDefault = bool(request.forms.disableByDefault)
+    showCommentWithBlock = bool(request.forms.showCommentWithBlock)
     countOfAddedDispatchList = preparation.addDispatchList(dispatchGroupName, description, links, groupSize,
-                                                           disableByDefault, repeatTimes=repeatTimes)
-    return {"success": True, "countOfAddedItems": countOfAddedDispatchList}
+                                                           disableByDefault, showCommentWithBlock,
+                                                           repeatTimes=repeatTimes)
+    return {"success": True,
+            "countOfAddedItems": countOfAddedDispatchList,
+            "text": "Список был успешно добавлен, теперь его можно использовать.\nДобавлено %s новых блоков" % countOfAddedDispatchList}
 
 
 @get("/templates/dispatch_group_buttons")
@@ -207,8 +217,11 @@ class BottleServer(threading.Thread):
         def _logToLogger(*args, **kwargs):
             try:
                 actual_response = fn(*args, **kwargs)
+                login = None
+                if request.get_header("Authorization") and request.get_header("Authorization").startswith("Basic "):
+                    login = base64.b64decode(request.get_header("Authorization")[6:]).split(":")[0]
                 log.info('%s: %s %s %s %s',
-                         request.get_header("Ssl-Dn", "non-ssl"),
+                         login if login else request.get_header("Ssl-Dn", "non-ssl"),
                          request.remote_addr,
                          request.method,
                          request.url,

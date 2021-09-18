@@ -35,7 +35,7 @@ class Preparation:
             yield lst[i:i + n]
 
     def addDispatchList(self, dispatch_group_name: str, description: str, links: list, devideBy: int,
-                        disableByDefault: bool, dispatch_group_id: int = None, repeatTimes: int = 1, ):
+                        disableByDefault: bool, showCommentWithBlock:bool, dispatch_group_id: int = None, repeatTimes: int = 1, ):
         dispatchListGroup = self.dao.getDispatchListGroupById(dispatch_group_id) if dispatch_group_id \
             else self.dao.getDispatchListGroupByName(dispatch_group_name)
         if not dispatchListGroup:
@@ -45,6 +45,7 @@ class Preparation:
                 social_network=None,
                 description=description,
                 enabled=not disableByDefault,
+                show_comment_with_block=showCommentWithBlock,
                 repeat=repeatTimes
             )
             dispatchListGroup = self.dao.saveDispatchListGroup(dispatchListGroup)

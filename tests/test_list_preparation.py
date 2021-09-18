@@ -38,7 +38,8 @@ def test_small_count_of_data():
         "описание",
         ["only you"],
         10,
-        True
+        True,
+        False
     )
     assert result == 1
     assert dao.getDispatchGroupInfo(dao.getDispatchListGroupByName(dispatch_group_name).id).count == 1
@@ -53,7 +54,8 @@ def test_enough_data():
         "вот какое-то такое описание",
         ["@tralivali_%s" % i for i in range(links_count)],
         group_size,
-        False)
+        False,
+        True)
     common_count_of_rows = links_count // group_size + (bool(links_count % group_size) * 1)
     assert result == common_count_of_rows
     assert dao.getDispatchGroupInfo(

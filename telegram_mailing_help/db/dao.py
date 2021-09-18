@@ -70,6 +70,7 @@ class DispatchListGroupItem:
     priority: int = 100
     repeat: int = 1
     hidden: bool = False
+    show_comment_with_block: bool = False
 
 
 @dataclass
@@ -83,6 +84,7 @@ class DispatchGroupInfo:
     enabled: bool
     priority: int = 100
     repeat: int = 1
+    show_comment_with_block: bool = False
 
 
 @dataclass
@@ -235,8 +237,9 @@ class Dao:
         return rez
 
     def getDispatchListGroupByName(self, dispatch_group_name: str):
-        result = self.worker.execute("SELECT * from DISPATCH_LIST_GROUP where dispatch_group_name=? AND hidden=0 LIMIT 1",
-                                     values=(dispatch_group_name,))
+        result = self.worker.execute(
+            "SELECT * from DISPATCH_LIST_GROUP where dispatch_group_name=? AND hidden=0 LIMIT 1",
+            values=(dispatch_group_name,))
         if len(result) != 1:
             rez = None
         else:
@@ -320,7 +323,7 @@ class Dao:
 
     def getDispatchGroupInfo(self, dispatch_group_id):
         result = self.worker.execute(
-            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description,dlg.priority,dlg.repeat FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
+            "SELECT dlg.id, dlg.dispatch_group_name,COUNT(dl.id),SUM(dl.is_assigned),dlg.enabled,dlg.description,dlg.priority,dlg.repeat,dlg.show_comment_with_block FROM DISPATCH_LIST dl LEFT JOIN DISPATCH_LIST_GROUP dlg ON (dl.dispatch_group_id=dlg.id) WHERE dl.dispatch_group_id=? GROUP BY dl.dispatch_group_id",
             values=(dispatch_group_id,))
         if len(result) == 0:
             return None
@@ -335,5 +338,6 @@ class Dao:
                 enabled=bool(row[4]),
                 description=row[5],
                 priority=row[6],
-                repeat=row[7]
+                repeat=row[7],
+                show_comment_with_block=row[8]
             )
