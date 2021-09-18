@@ -218,8 +218,8 @@ class BottleServer(threading.Thread):
             try:
                 actual_response = fn(*args, **kwargs)
                 login = None
-                if request.get_header("Authorization") and request.get_header("Authorization").startswith("Basic "):
-                    login = base64.b64decode(request.get_header("Authorization")[6:]).split(":")[0]
+                # if request.get_header("Authorization") and request.get_header("Authorization").startswith("Basic "):
+                #     login = base64.b64decode(request.get_header("Authorization")[6:]).split(":")[0]
                 log.info('%s: %s %s %s %s',
                          login if login else request.get_header("Ssl-Dn", "non-ssl"),
                          request.remote_addr,
