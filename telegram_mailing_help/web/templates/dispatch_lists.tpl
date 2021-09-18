@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html style="font-size: 16px;">
+<html style="font-size: 16px;" xmlns="http://www.w3.org/1999/html">
 % include('header.tpl', title='Disp: Списки', custom_css='dispatch_lists.css')
 <section class="u-align-left u-clearfix u-section-1" id="sec-dedf">
     <div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
@@ -97,6 +97,8 @@
                                               required=""></textarea>
                                     <label for="list_of_items" class="u-label"
                                            id="list_of_items_counter"></label>
+                                    <input for="list_of_items" type="button" onclick="loadDataFromFile('content_from_local_file')" value="Загрузить из .txt ->" />
+                                    <input for="list_of_items"  id="content_from_local_file" type="file">
                                 </div>
                                 <div class="u-form-group u-form-select u-form-group-4">
                                     <label for="select-1ff5" class="u-label">Разделить список на группы по:</label>

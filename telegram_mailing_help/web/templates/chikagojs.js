@@ -99,10 +99,23 @@ changeSettings = function (key) {
     }
 }
 
+loadDataFromFile=function (fileId){
+    let reader = new FileReader();
+    reader.onload = function (e) {
+        let inputData=e.target.result;
+        $('#list_of_items').val(inputData);
+        $('#list_of_items_counter').text('Количество строк: ' + inputData.split("\n").length);
+    };
+    let file = document.getElementById(fileId).files[0];
+    reader.readAsText(file);
+}
+
+updateCounterForListOfItemsArea=function () {
+    $('#list_of_items_counter').text('Количество строк: ' + ($(this).val().split("\n").length));
+}
+
 GLOBAL_DIRTY_STORAGE = {};
 if (GLOBAL_DIRTY_STORAGE["dispathcer_group_list_of_items_messasge_counter_event"] == undefined) {
-    $("#list_of_items").on('change paste', function () {
-        $('#list_of_items_counter').text('Количество строк: ' + ($(this).val().split("\n").length));
-    });
+    $("#list_of_items").on('change paste', updateCounterForListOfItemsArea);
     GLOBAL_DIRTY_STORAGE["dispathcer_group_list_of_items_messasge_counter_event"] = true;
 }
