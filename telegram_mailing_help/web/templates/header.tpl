@@ -5,12 +5,12 @@
     <meta name="description" content="">
     <meta name="page_type" content="np-template-header-footer-from-plugin">
     <title>{{title}}</title>
-    <link rel="stylesheet" href="nicepage.css" media="screen">
-    <link rel="stylesheet" href="nicepage-custom.css" media="screen">
-    <link rel="stylesheet" href="{{custom_css}}" media="screen">
-    <script class="u-script" type="text/javascript" src="jquery-1.9.1.min.js" defer=""></script>
-    <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
-    <script type="text/javascript" src="chikagojs.js" defer=""></script>
+    <link rel="stylesheet" href="{{hash('nicepage.css')}}" media="screen">
+    <link rel="stylesheet" href="{{hash('nicepage-custom.css')}}" media="screen">
+    <link rel="stylesheet" href="{{hash(custom_css)}}" media="screen">
+    <script class="u-script" type="text/javascript" src="{{hash('jquery-1.9.1.min.js')}}" defer=""></script>
+    <script class="u-script" type="text/javascript" src="{{hash('nicepage.js')}}" defer=""></script>
+    <script type="text/javascript" src="{{hash('chikagojs.js')}}" defer=""></script>
     <meta name="generator" content="Nicepage 3.3.5, nicepage.com">
     <link id="u-theme-google-font" rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i">

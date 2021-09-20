@@ -11,16 +11,19 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 import base64
+import hashlib
 import json
 import logging
 import pathlib
 import threading
 from functools import wraps
 
+import bottle
 from bottle import TEMPLATE_PATH, HTTPResponse, BaseRequest, request, response, get, post, redirect, template, \
     static_file, run as run_bottle
 
-TEMPLATE_PATH.append(str(pathlib.Path(__file__).parent.absolute()) + '/templates/')
+HELPER_TEMPLATE_PATH = str(pathlib.Path(__file__).parent.absolute()) + '/templates/'
+TEMPLATE_PATH.append(HELPER_TEMPLATE_PATH)
 
 from telegram_mailing_help.telegram.bot import MailingBot
 
@@ -33,6 +36,20 @@ from telegram_mailing_help.logic.listPreparation import Preparation
 
 log = logging.getLogger("bottleServer")
 
+HASHES_CACHE = {}
+
+
+def hashSumForStatic(staticFileName):
+    if not HASHES_CACHE.get(staticFileName):
+        md5_hash = hashlib.md5()
+        with open(HELPER_TEMPLATE_PATH + "/" + staticFileName, "rb") as a_file:
+            content = a_file.read()
+            md5_hash.update(content)
+            HASHES_CACHE[staticFileName] = md5_hash.hexdigest()
+    return staticFileName + "?hash=" + HASHES_CACHE.get(staticFileName)
+
+
+bottle.BaseTemplate.defaults["hash"] = hashSumForStatic
 db: Dao = None
 preparation: Preparation = None
 bot: MailingBot = None
